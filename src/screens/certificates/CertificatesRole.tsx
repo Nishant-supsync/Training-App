@@ -28,23 +28,11 @@ export function RoleSelectionScreen() {
       await AsyncStorage.setItem('@user_role_preference', role);
     }
     
-    // Direct employees to their certificates page, managers to categories
-    if (role === 'employee') {
-      // For employees, go directly to their certificates
-      router.push({
-        pathname: '/certificate-section/employee/1', // Using ID 1 for the current user
-        params: { 
-          role,
-          name: user?.name || 'Your' // Use the user's name if available
-        }
-      } as any);
-    } else {
-      // For managers, show the categories selection first
-      router.push({
-        pathname: '/certificate-section/categories',
-        params: { role }
-      } as any);
-    }
+    // Both roles go to categories screen
+    router.push({
+      pathname: '/certificate-section/categories',
+      params: { role }
+    } as any);
   };
 
   return (

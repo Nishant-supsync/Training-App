@@ -57,16 +57,6 @@ export function CertificateCategoriesScreen() {
         
         setUserRole(role);
         
-        // If role is employee, redirect to certificates
-        if (role === 'employee') {
-          router.replace({
-            pathname: '/certificate-section/employee/1',
-            params: { 
-              role,
-              name: user?.name || 'Your'
-            }
-          } as any);
-        }
       } catch (error) {
         console.error('Error loading user role:', error);
         setUserRole('employee'); // Default to employee on error
@@ -74,7 +64,7 @@ export function CertificateCategoriesScreen() {
     };
     
     loadUserRoleAndRedirect();
-  }, [params.role, user, router]);
+  }, [params.role, user]);
   
   const certificateCategories: CategoryType[] = [
     { id: '1', name: 'Food Manager' },
@@ -89,15 +79,21 @@ export function CertificateCategoriesScreen() {
   ];
   
   const handleCategorySelect = (category: CategoryType) => {
-    // Check user role - if manager, go to employee list, otherwise go to certificate upload
-    const isManager = true; // This would be fetched from storage in a real app
-    
-    if (isManager) {
-      // Managers should pick an employee first
-      router.push(`/certificate-section/employees?category=${category.id}` as any);
+    // Route based on user role
+    if (userRole === 'employee') {
+      // Employees go to their certificates list for the selected category
+      router.push({
+        pathname: '/certificate-section/employee/1',
+        params: { 
+          category: category.id,
+          categoryName: category.name,
+          role: userRole,
+          name: user?.name || 'Your'
+        }
+      } as any);
     } else {
-      // Employees go straight to upload
-      router.push(`/certificate-section/upload?category=${category.id}` as any);
+      // Managers go to employee list
+      router.push(`/certificate-section/employees?category=${category.id}` as any);
     }
   };
   
