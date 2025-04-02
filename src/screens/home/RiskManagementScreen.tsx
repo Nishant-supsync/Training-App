@@ -201,7 +201,7 @@ import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-na
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Shield, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Shield, ChevronRight } from 'lucide-react-native';
 import '@/global.css';
 import { useAuth } from '@/context/AuthContext';
 
@@ -272,7 +272,7 @@ export default function RiskManagementScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3">
         <TouchableOpacity onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#000" />
+          <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
         <View className="flex-row items-center">
           <Text className="text-xl font-semibold text-[#1A2B3C]">Risk Management</Text>

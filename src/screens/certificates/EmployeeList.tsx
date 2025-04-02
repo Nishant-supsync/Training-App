@@ -1,111 +1,159 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
+import {
+  View,
+  Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
-  Image,
-  TextInput
+  TextInput,
+  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Plus } from 'lucide-react-native';
-import '@/global.css';
+import { ArrowLeft, Search, ChevronRight, ArrowRight } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Certificate = {
+type Employee = {
   id: string;
   name: string;
-  date: string;
-  size: string;
-  type: 'pdf' | 'image';
+  department: string;
+  certificateCount: number;
 };
 
-export default function EmployeeCertificateDetailScreen() {
+export default function EmployeeListScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { category, categoryName } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [employeeName, setEmployeeName] = useState('Cameron Williamson');
-  
-  // This would be fetched from an API in a real app
-  useEffect(() => {
-    // Simplified data just for ID 1
-    const certificatesData = [
-      { id: '1', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
-      { id: '2', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
-      { id: '3', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
-      { id: '4', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
-    ];
-    
-    setCertificates(certificatesData);
-  }, []);  // Remove id dependency since we're using fixed data
-  
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-    // In a real app, you would filter certificates based on the search text
+  const [filterType, setFilterType] = useState<'all' | 'withCert' | 'withoutCert'>('all');
+
+  const [employees, setEmployees] = useState<Employee[]>([
+    { id: '1', name: 'John Doe', department: 'Kitchen', certificateCount: 2 },
+    { id: '2', name: 'Jane Smith', department: 'Service', certificateCount: 0 },
+    { id: '3', name: 'Mike Johnson', department: 'Management', certificateCount: 3 },
+    { id: '4', name: 'Sarah Williams', department: 'Kitchen', certificateCount: 0 },
+    { id: '5', name: 'Cameron Williamson', department: 'Kitchen', certificateCount: 1 },
+    { id: '6', name: 'Alex Paul', department: 'Service', certificateCount: 2 }
+  ]);
+
+  const handleEmployeeSelect = (employee: Employee) => {
+    router.push({
+      pathname: `/certificate-section/employee/${employee.id}`,
+      params: {
+        category,
+        categoryName,
+        employeeName: employee.name
+      }
+    } as any);
   };
-  
-  const handleAddCertificate = () => {
-    router.push(`/certificate-section/upload?employeeId=${id}` as any);
-  };
-  
-  const renderNoCertificates = () => (
-    <View className="flex-1 justify-center items-center px-8">
-      <Text className="text-xl font-bold text-center mb-4">No Certificate Available</Text>
-      <Text className="text-base text-[#4A5568] text-center mb-4">
-        Have a certificate from someone else? Please click the <Text className="font-bold">plus</Text> icon above to upload your certificate.
-      </Text>
-    </View>
-  );
-  
-  const renderCertificatesList = () => (
-    <View className="px-4">
-      <Text className="text-[#718096] text-base mb-3">Certificates</Text>
-      
-      {certificates.map((cert) => (
-        <View 
-          key={cert.id}
-          className="bg-white rounded-lg mb-3 p-4 flex-row items-center"
-        >
-          <View className="w-10 h-12 justify-center items-center mr-3">
-            <View className="bg-[#F56565] rounded-sm w-10 h-6 items-center justify-center">
-              <Text className="text-white text-xs font-bold">PDF</Text>
-            </View>
-          </View>
-          <View className="flex-1">
-            <Text className="text-base font-medium">{cert.name}</Text>
-            <Text className="text-[#718096] text-sm">{cert.date} · {cert.size}</Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-  
+
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch =
+      employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.department.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (filterType === 'all') return matchesSearch;
+    if (filterType === 'withCert') return matchesSearch && employee.certificateCount > 0;
+    if (filterType === 'withoutCert') return matchesSearch && employee.certificateCount === 0;
+
+    return matchesSearch;
+  });
+
   return (
-    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
+    <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
+
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-[#F0F7FF]">
-        <TouchableOpacity 
+      <View className="flex-row items-center justify-between px-4 py-3 bg-[#ECF6FF]">
+        <TouchableOpacity
           onPress={() => router.back()}
           className="p-1"
         >
-          <ChevronLeft size={24} color="#000" />
+          <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-semibold">{employeeName}</Text>
-        <TouchableOpacity 
-          className="w-8 h-8 bg-[#4299E1] rounded-full items-center justify-center"
-          onPress={handleAddCertificate}
-        >
-          <Plus size={18} color="#fff" />
-        </TouchableOpacity>
+        <Text className="text-xl font-semibold">{categoryName}</Text>
+        <View className="w-8" />
       </View>
-      
-      <ScrollView className="flex-1">
-        {certificates.length > 0 ? renderCertificatesList() : renderNoCertificates()}
+
+
+      {/* Search Bar */}
+      <View className="px-4 py-3">
+
+        <Text className="text-xl font-normal text-black mt-3 mb-4">
+          Employees
+        </Text>
+
+
+        <View className="flex-row items-center bg-[#F8F9FA] rounded-lg border border-[#EDEFF3] px-3 py-2">
+          <Search size={20} color="#718096" />
+          <TextInput
+            className="ml-3 flex-1 py-2 text-gray-800 text-base leading-none outline-none"
+
+            placeholder="Search employees..."
+            placeholderTextColor="#718096"
+
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      {/* Filter Buttons */}
+      <View className="flex-row justify-start space-x-2 px-4 pb-3">
+        {[
+          { label: 'All', value: 'all' },
+          { label: 'Certificate Available', value: 'withCert' },
+          { label: 'No Certificate', value: 'withoutCert' },
+        ].map(({ label, value }) => (
+          <TouchableOpacity
+            key={value}
+            className={`px-4 py-2 rounded-md border ${filterType === value ? 'bg-[#E7F0FE] border-[#4A90E2]' : 'border-gray-300'}`}
+            onPress={() => setFilterType(value as any)}
+          >
+            <Text className={`text-sm font-medium ${filterType === value ? 'text-[#4A90E2]' : 'text-gray-600'}`}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Employee List */}
+      <ScrollView className="flex-1 px-4">
+        {filteredEmployees.length > 0 ? (
+          filteredEmployees.map((employee) => (
+            <TouchableOpacity
+              key={employee.id}
+              className="bg-white rounded-xl p-4 mb-3 flex-row items-center border border-gray-200 "
+              onPress={() => handleEmployeeSelect(employee)}
+            >
+              <View className="w-10 h-10 bg-[#4299E1] rounded-full items-center justify-center mr-3">
+                <Text className="text-white font-semibold text-lg">
+                  {employee.name.charAt(0)}
+                </Text>
+              </View>
+              {/* <View className="flex-1">
+                <Text className="text-base font-medium">{employee.name}</Text>
+                <Text className="text-[#718096] text-sm">{employee.department}</Text>
+              </View> */}
+              <View className="flex-1">
+                <Text className="text-base font-medium">{employee.name}</Text>
+                {employee.certificateCount > 0 ? (
+                  <Text className="text-[#4A90E2] text-sm font-medium">
+                    {employee.certificateCount} {employee.certificateCount === 1 ? 'Certificate' : 'Certificates'}
+                  </Text>
+                ) : (
+                  <Text className="text-gray-500 text-sm">No Certificates Available</Text>
+                )}
+              </View>
+              <ArrowRight size={35} color="#000000" className='bg-[#EDEFF3] p-2 rounded-full' />
+
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View className="flex-1 justify-center items-center mt-10">
+            <Text className="text-lg text-gray-500">No employees found</Text>
+          </View>
+        )}
       </ScrollView>
+
     </SafeAreaView>
   );
 }
