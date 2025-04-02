@@ -81,7 +81,6 @@ export default function EmployeeListScreen() {
           Employees
         </Text>
 
-
         <View className="flex-row items-center bg-[#F8F9FA] rounded-lg border border-[#EDEFF3] px-3 py-2">
           <Search size={20} color="#718096" />
           <TextInput
@@ -97,7 +96,7 @@ export default function EmployeeListScreen() {
       </View>
 
       {/* Filter Buttons */}
-      <View className="flex-row justify-start space-x-2 px-4 pb-3">
+      <View className="flex-row justify-start gap-3 px-4 pb-3">
         {[
           { label: 'All', value: 'all' },
           { label: 'Certificate Available', value: 'withCert' },
@@ -143,7 +142,9 @@ export default function EmployeeListScreen() {
                   <Text className="text-gray-500 text-sm">No Certificates Available</Text>
                 )}
               </View>
-              <ArrowRight size={35} color="#000000" className='bg-[#EDEFF3] p-2 rounded-full' />
+              <View className="bg-[#EDEFF3] p-2 rounded-full">
+                <ArrowRight size={14} color="#000000" />
+              </View>
 
             </TouchableOpacity>
           ))
