@@ -151,7 +151,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Plus, Search, Calendar, X, Trash } from 'lucide-react-native';
+import { Plus, Search, Calendar, X, Trash, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
@@ -440,7 +440,7 @@ export function EmployeeCertificatesScreen() {
           onPress={() => router.back()}
           className="p-1"
         >
-          <ChevronLeft size={24} color="#000" />
+          <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-semibold flex-1 text-center">
           {employeeName || 'Cameron Williamson'}
