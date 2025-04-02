@@ -37,13 +37,12 @@
 //     </ThemeProvider>
 //   );
 // }
-
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useSegments, useRouter } from 'expo-router';
+import { useRouter, Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
@@ -58,13 +57,13 @@ import React from 'react';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import '@/global.css';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function AuthHandler({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoading } = useAuth();
-  const segments = useSegments();
   const router = useRouter();
 
   // useEffect(() => {
@@ -102,13 +101,38 @@ export default function RootLayout() {
     Raleway_700Bold,
   });
 
+  const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      setIsReady(true);
     }
   }, [loaded]);
 
-  if (!loaded) {
+  useEffect(() => {
+    if (isReady) {
+      checkInitialRoute();
+    }
+  }, [isReady]);
+
+  const checkInitialRoute = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100)); // ✅ Ensure router is ready
+      const savedRole = await AsyncStorage.getItem('@user_role_preference');
+  
+      if (savedRole) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/role');
+      }
+    } catch (error) {
+      console.error('Error checking initial route:', error);
+    }
+  };
+
+  if (!loaded || !isReady) {
     return null;
   }
 
@@ -117,15 +141,9 @@ export default function RootLayout() {
       <AuthProvider>
         <SafeAreaProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            {/* ✅ Slot handles all pages instead of defining a second Stack */}
             <AuthHandler>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="auth" options={{ headerShown: false }} />
-                <Stack.Screen name="certificate-section" options={{ headerShown: false }} />
-                <Stack.Screen name="inspection-certificates" options={{ headerShown: false }} />
-                <Stack.Screen name="risk-management" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
+              <Slot />
             </AuthHandler>
             <StatusBar style="auto" />
           </ThemeProvider>

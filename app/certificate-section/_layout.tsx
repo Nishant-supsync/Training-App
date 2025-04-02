@@ -31,13 +31,6 @@ export default function CertificatesLayout() {
           title: 'Employee Certificates'
         }}
       />
-      <Stack.Screen 
-        name="upload"
-        options={{
-          headerShown: false,
-          title: 'Upload Certificate'
-        }}
-      />
     </Stack>
   );
 } 
