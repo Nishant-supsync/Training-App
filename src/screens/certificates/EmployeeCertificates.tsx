@@ -19,7 +19,7 @@ type CertificateType = {
 export function EmployeeCertificatesScreen() {
   const router = useRouter();
   const [certificates, setCertificates] = useState<CertificateType[]>([
-    { id: '1', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB' },
+    { id: '1', name: 'Nishant.pdf', date: '10/06/2023', size: '321 KB' },
     { id: '2', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB' },
     { id: '3', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB' },
     { id: '4', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB' },

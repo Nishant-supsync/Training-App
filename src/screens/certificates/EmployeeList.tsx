@@ -1,247 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  StyleSheet, 
   View, 
   Text, 
   TouchableOpacity,
   SafeAreaView,
-  TextInput,
+  ScrollView,
   Image,
-  ImageSourcePropType
+  TextInput
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Plus } from 'lucide-react-native';
+import '@/global.css';
 
-type EmployeeType = {
+type Certificate = {
   id: string;
   name: string;
-  avatar: ImageSourcePropType;
-  certificates: number;
+  date: string;
+  size: string;
+  type: 'pdf' | 'image';
 };
 
-export function EmployeeListScreen() {
+export default function EmployeeCertificateDetailScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterValue, setFilterValue] = useState<'all' | 'available' | 'none'>('all');
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [employeeName, setEmployeeName] = useState('Cameron Williamson');
   
-  // This would be fetched based on the category in a real app
-  const employees: EmployeeType[] = [
-    { id: '1', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 4 },
-    { id: '2', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 0 },
-    { id: '3', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 0 },
-    { id: '4', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 2 },
-    { id: '5', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 2 },
-    { id: '6', name: 'Cameron Williamson', avatar: { uri: 'https://randomuser.me/api/portraits/men/32.jpg' }, certificates: 2 },
-  ];
+  // This would be fetched from an API in a real app
+  useEffect(() => {
+    // Simplified data just for ID 1
+    const certificatesData = [
+      { id: '1', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
+      { id: '2', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
+      { id: '3', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
+      { id: '4', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB', type: 'pdf' as const },
+    ];
+    
+    setCertificates(certificatesData);
+  }, []);  // Remove id dependency since we're using fixed data
   
-  const getFilteredEmployees = () => {
-    let filtered = employees;
-    
-    if (searchQuery) {
-      filtered = filtered.filter(emp => 
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    if (filterValue === 'available') {
-      filtered = filtered.filter(emp => emp.certificates > 0);
-    } else if (filterValue === 'none') {
-      filtered = filtered.filter(emp => emp.certificates === 0);
-    }
-    
-    return filtered;
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    // In a real app, you would filter certificates based on the search text
   };
   
-  const handleEmployeeSelect = (employee: EmployeeType) => {
-    router.push(`/certificate-section/employee/${employee.id}` as any);
+  const handleAddCertificate = () => {
+    router.push(`/certificate-section/upload?employeeId=${id}` as any);
   };
+  
+  const renderNoCertificates = () => (
+    <View className="flex-1 justify-center items-center px-8">
+      <Text className="text-xl font-bold text-center mb-4">No Certificate Available</Text>
+      <Text className="text-base text-[#4A5568] text-center mb-4">
+        Have a certificate from someone else? Please click the <Text className="font-bold">plus</Text> icon above to upload your certificate.
+      </Text>
+    </View>
+  );
+  
+  const renderCertificatesList = () => (
+    <View className="px-4">
+      <Text className="text-[#718096] text-base mb-3">Certificates</Text>
+      
+      {certificates.map((cert) => (
+        <View 
+          key={cert.id}
+          className="bg-white rounded-lg mb-3 p-4 flex-row items-center"
+        >
+          <View className="w-10 h-12 justify-center items-center mr-3">
+            <View className="bg-[#F56565] rounded-sm w-10 h-6 items-center justify-center">
+              <Text className="text-white text-xs font-bold">PDF</Text>
+            </View>
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-medium">{cert.name}</Text>
+            <Text className="text-[#718096] text-sm">{cert.date} · {cert.size}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
   
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
       <StatusBar style="dark" />
       
-      <View style={styles.header}>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3 bg-[#F0F7FF]">
         <TouchableOpacity 
-          style={styles.backButton}
           onPress={() => router.back()}
+          className="p-1"
         >
-          <Text>←</Text>
+          <ChevronLeft size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Food Manager</Text>
+        <Text className="text-xl font-semibold">{employeeName}</Text>
         <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => router.push('/certificate-section/upload' as any)}
+          className="w-8 h-8 bg-[#4299E1] rounded-full items-center justify-center"
+          onPress={handleAddCertificate}
         >
-          <Text>+</Text>
+          <Plus size={18} color="#fff" />
         </TouchableOpacity>
       </View>
       
-      <Text style={styles.sectionTitle}>Employees</Text>
-      
-      <View style={styles.searchContainer}>
-        <Text>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-      
-      <View style={styles.filterContainer}>
-        <TouchableOpacity 
-          style={[styles.filterButton, filterValue === 'all' && styles.activeFilter]}
-          onPress={() => setFilterValue('all')}
-        >
-          <Text style={styles.filterButtonText}>All</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.filterButton, filterValue === 'available' && styles.activeFilter]}
-          onPress={() => setFilterValue('available')}
-        >
-          <Text style={styles.filterButtonText}>Certificate Available</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.filterButton, filterValue === 'none' && styles.activeFilter]}
-          onPress={() => setFilterValue('none')}
-        >
-          <Text style={styles.filterButtonText}>No Certificate</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {getFilteredEmployees().map((employee) => (
-        <TouchableOpacity 
-          key={employee.id}
-          style={styles.employeeItem}
-          onPress={() => handleEmployeeSelect(employee)}
-        >
-          <View style={styles.employeeInfo}>
-            <Image source={employee.avatar} style={styles.employeeAvatar} />
-            <Text style={styles.employeeName}>{employee.name}</Text>
-          </View>
-          <View style={styles.employeeStatus}>
-            {employee.certificates > 0 ? (
-              <Text style={styles.certificateCount}>{employee.certificates} Certificates</Text>
-            ) : (
-              <Text style={styles.noCertificate}>No Certificates Available</Text>
-            )}
-            <Text>›</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+      <ScrollView className="flex-1">
+        {certificates.length > 0 ? renderCertificatesList() : renderNoCertificates()}
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#F0F4F8',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#4299E1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    padding: 16,
-    paddingBottom: 8,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    marginTop: 8,
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    padding: 8,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingTop: 8,
-  },
-  filterButton: {
-    backgroundColor: '#F7FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-  },
-  activeFilter: {
-    backgroundColor: '#EBF8FF',
-    borderColor: '#4299E1',
-  },
-  filterButtonText: {
-    fontSize: 14,
-    color: '#4A5568',
-  },
-  employeeItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  employeeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  employeeAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  employeeName: {
-    fontSize: 16,
-  },
-  employeeStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  certificateCount: {
-    color: '#4299E1',
-    marginRight: 8,
-  },
-  noCertificate: {
-    color: '#A0AEC0',
-    marginRight: 8,
-  },
-});
-
-export default EmployeeListScreen; 
