@@ -1,27 +1,36 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 
 export const Header = () => {
   const router = useRouter();
 
   return (
-    <View className="bg-white">
-      <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
+    <View>
+
+      <View className="flex-row items-center justify-between px-4 py-3 bg-[#ECF6FF]">
+        <TouchableOpacity onPress={() => router.back()}>
+          <ArrowLeft size={24} color="#000" />
+        </TouchableOpacity>
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Text className="text-2xl">←</Text>
-          </TouchableOpacity>
-          <Text className="text-xl font-semibold">Inspection Certificate</Text>
+          <Text className="text-xl font-semibold text-[#1A2B3C]">Inspection Certificate</Text>
         </View>
+        <View className="w-10" />
       </View>
       
-      <View className="p-4 flex-row items-center bg-blue-50/50">
+      <View className="pr-4 pb-0 flex-row items-center bg-[#ECF6FF]">
         <Image
           source={require('@/assets/images/riskManagement/delo_wave.png')}
-          className="w-12 h-12 mr-3"
+          className="h-28 mr-4"
+          resizeMode="contain"
         />
-        <Text className="text-gray-700">Hello there! Upload your certificates here</Text>
+
+        <View className="flex-1 flex justify-center items-start bg-white p-4 rounded-2xl">
+          <Text className="text-base text-[#1A2B3C]">
+            Hello there! Upload your {"\n"} certificates here
+          </Text>
+        </View>
       </View>
     </View>
   );

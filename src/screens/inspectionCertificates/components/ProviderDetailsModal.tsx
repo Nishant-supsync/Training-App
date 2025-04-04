@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Modal } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ServiceProvider } from '../types';
 
@@ -59,16 +59,17 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
           </View>
           
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Location</Text>
-            <View style={styles.providerLocation}>
-              <IconSymbol name="mappin" size={16} color="#4A5568" />
-              <Text style={styles.locationText}>{provider.location}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Contact Information</Text>
-            <Text style={styles.contactInfo}>{provider.contactInfo}</Text>
+            <View style={styles.contactInfoContainer}>
+              <View style={styles.contactInfoRow}>
+                <IconSymbol name="phone" size={20} color="#4A5568" />
+                <Text style={styles.contactInfoText}>{provider.contactInfo}</Text>
+              </View>
+              <View style={styles.contactInfoRow}>
+                <IconSymbol name="mappin" size={20} color="#4A5568" />
+                <Text style={styles.contactInfoText}>{provider.location}</Text>
+              </View>
+            </View>
           </View>
           
           <TouchableOpacity style={styles.contactButton}>
@@ -84,24 +85,25 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '90%',
+    borderRadius: 12,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#1A2B3C',
   },
   providerDetailHeader: {
@@ -120,14 +122,14 @@ const styles = StyleSheet.create({
   },
   providerDetailName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#1A2B3C',
     marginBottom: 4,
   },
   providerDetailService: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4A5568',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -139,39 +141,39 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   sectionContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1A2B3C',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   providerDetailDescription: {
     fontSize: 14,
     color: '#4A5568',
     lineHeight: 20,
   },
-  providerLocation: {
+  contactInfoContainer: {
+    backgroundColor: '#F7FAFC',
+    borderRadius: 8,
+    padding: 16,
+  },
+  contactInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  locationText: {
-    marginLeft: 4,
+  contactInfoText: {
+    marginLeft: 12,
     fontSize: 14,
     color: '#4A5568',
-  },
-  contactInfo: {
-    fontSize: 14,
-    color: '#4A5568',
-    lineHeight: 20,
   },
   contactButton: {
     backgroundColor: '#2C7BE5',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    marginTop: 12,
   },
   contactButtonText: {
     color: '#FFFFFF',

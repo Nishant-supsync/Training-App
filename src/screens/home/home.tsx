@@ -295,7 +295,7 @@ export default function HomeScreen() {
               <View className="flex-row justify-between gap-4">
                 <TouchableOpacity
                   className="flex-1 bg-orange-100 rounded-2xl p-4 items-center"
-                  onPress={() => router.push('/risk-management')}
+                  onPress={() => router.push('/risk-management' as any)}
                 >
                   <View className="h-12 w-12 bg-white rounded-full items-center justify-center mb-2 shadow-sm">
                     <AlertTriangle size={24} color="#FF8A65" />

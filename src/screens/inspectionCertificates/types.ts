@@ -4,6 +4,7 @@ export type InspectionCertificate = {
   date: string;
   status: 'pass' | 'fail' | 'pending';
   documentUrl?: string;
+  renewalPeriod: string;
 };
 
 export type ServiceProvider = {

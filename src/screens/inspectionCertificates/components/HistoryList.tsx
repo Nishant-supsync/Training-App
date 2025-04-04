@@ -1,177 +1,107 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { InspectionCertificate } from '../types';
+import { useRouter } from 'expo-router';
 import moment from 'moment';
+import { ChevronRight, PenSquare } from 'lucide-react-native';
 
 interface HistoryListProps {
-  certificates: InspectionCertificate[];
   onUploadPress: () => void;
 }
 
-export const HistoryList: React.FC<HistoryListProps> = ({ certificates, onUploadPress }) => {
+// You can move this to a separate file like dummyData.ts later
+export const dummyCertificates: InspectionCertificate[] = [
+  {
+    id: '1',
+    type: 'Annual Safety Inspection',
+    date: '2024-03-15',
+    status: 'pass',
+    documentUrl: 'safety_inspection_2024.pdf',
+    renewalPeriod: '6 Months'
+  },
+  {
+    id: '2',
+    type: 'Fire Safety Certification',
+    date: '2024-02-20',
+    status: 'pending',
+    documentUrl: 'fire_safety_cert.pdf',
+    renewalPeriod: '6 Months'
+  },
+  {
+    id: '3',
+    type: 'Equipment Maintenance Report',
+    date: '2024-01-10',
+    status: 'pass',
+    documentUrl: 'equipment_maintenance.pdf',
+    renewalPeriod: '6 Months'
+  },
+  {
+    id: '4',
+    type: 'Health & Safety Audit',
+    date: '2023-12-05',
+    status: 'fail',
+    documentUrl: 'health_safety_audit.pdf',
+    renewalPeriod: '6 Months'
+  },
+  {
+    id: '5',
+    type: 'Environmental Compliance',
+    date: '2023-11-30',
+    status: 'pass',
+    documentUrl: 'environmental_report.pdf',
+    renewalPeriod: '6 Months'
+  }
+];
+
+export const HistoryList: React.FC<HistoryListProps> = ({ onUploadPress }) => {
+  const router = useRouter();
+  const [certificates] = useState(dummyCertificates);
+  
+  const handleCertificatePress = (certificate: InspectionCertificate) => {
+    router.push({
+      pathname: '/inspection-certificates/view-edit' as any,
+      params: { id: certificate.id }
+    });
+  };
+
   const renderCertificateItem = ({ item }: { item: InspectionCertificate }) => (
-    <View style={styles.certificateItem}>
-      <View style={styles.certificateHeader}>
-        <View style={styles.certificateInfo}>
-          <IconSymbol name="checkmark.seal.fill" size={24} color="#2C7BE5" />
-          <Text style={styles.certificateType}>{item.type}</Text>
-        </View>
-        <View 
-          style={[
-            styles.statusBadge,
-            item.status === 'pass' ? styles.passBadge : 
-            item.status === 'fail' ? styles.failBadge : 
-            styles.pendingBadge
-          ]}
-        >
-          <Text style={styles.statusText}>
-            {item.status === 'pass' ? 'PASS' : 
-             item.status === 'fail' ? 'FAIL' : 
-             'PENDING'}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.certificateDetails}>
-        <Text style={styles.dateText}>
-          Date: {moment(item.date).format('MMM D, YYYY')}
+    <TouchableOpacity 
+      className="flex-row items-center justify-between bg-white p-4 border-b border-gray-100"
+      onPress={() => handleCertificatePress(item)}
+    >
+      <View className="flex-1">
+        <Text className="text-base font-medium text-gray-900">{item.type}</Text>
+        <Text className="text-sm text-gray-500 mt-1">
+          {moment(item.date).format('MM/DD/YYYY')}
         </Text>
-        {item.documentUrl ? (
-          <TouchableOpacity style={styles.viewButton}>
-            <Text style={styles.viewButtonText}>View Document</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.uploadButton}>
-            <Text style={styles.uploadButtonText}>Upload Document</Text>
-          </TouchableOpacity>
-        )}
       </View>
-    </View>
+      <PenSquare size={20} color="#60A5FA" />
+    </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white">
       <FlatList
         data={certificates}
         renderItem={renderCertificateItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        className="flex-1"
+        contentContainerClassName="pb-20"
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No inspection certificates found</Text>
+          <View className="flex-1 justify-center items-center p-5">
+            <Text className="text-base text-gray-500">No inspection certificates found</Text>
           </View>
         )}
       />
       
       <TouchableOpacity 
-        style={styles.uploadButton}
+        className="bg-[#60A5FA] mx-4 mb-4 py-4 rounded-xl items-center"
         onPress={onUploadPress}
       >
-        <Text style={styles.uploadButtonText}>Upload Certificate</Text>
+        <Text className="text-white font-medium text-base">Upload Certificate</Text>
       </TouchableOpacity>
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  certificateItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  certificateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  certificateInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  certificateType: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1A2B3C',
-    marginLeft: 10,
-    flex: 1,
-  },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  passBadge: {
-    backgroundColor: '#EDF7ED',
-  },
-  failBadge: {
-    backgroundColor: '#FDEDED',
-  },
-  pendingBadge: {
-    backgroundColor: '#FFF8E6',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  certificateDetails: {
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: 12,
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#4A5568',
-    marginBottom: 12,
-  },
-  uploadButton: {
-    backgroundColor: '#2C7BE5',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    alignSelf: 'flex-start',
-  },
-  uploadButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  viewButton: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    alignSelf: 'flex-start',
-  },
-  viewButtonText: {
-    color: '#2C7BE5',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#4A5568',
-    textAlign: 'center',
-  },
-}); 
+}; 
