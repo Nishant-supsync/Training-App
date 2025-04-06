@@ -134,7 +134,7 @@
 //         {/* Character Speech Bubble */}
 //         <View className="flex-row mt-2 mb-6">
 //           <Image
-//             source={require('@/assets/images/riskManagement/delo_wave.png')}
+//             source={require('@/assets/images/avatar/delo_wave.png')}
 //             className="w-20 h-20"
 //             resizeMode="contain"
 //           />
@@ -288,7 +288,7 @@ export default function RiskManagementScreen() {
         {/* Character Speech Bubble */}
         <View className="flex-row mt-2 mb-6">
           <Image
-            source={require('@/assets/images/riskManagement/delo_wave.png')}
+            source={require('@/assets/images/avatar/delo_wave.png')}
             className="w-20 h-20"
             resizeMode="contain"
           />

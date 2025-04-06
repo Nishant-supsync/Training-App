@@ -9,7 +9,8 @@ type User = {
   name: string;
   email: string;
   role: UserRole;
-  employeeId: string;
+  restaurant_id: string;
+  employee_id: string;
   location: string;
   jobTitle: string;
   profileImage?: string;
@@ -35,21 +36,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing user session on app start
   useEffect(() => {
-    const loadUser = async () => {
+    const loadUserFromStorage = async () => {
       try {
-        const userJSON = await AsyncStorage.getItem('@user');
-        if (userJSON) {
-          setUser(JSON.parse(userJSON));
+        setIsLoading(true);
+        const userJson = await AsyncStorage.getItem('@user');
+        
+        if (userJson) {
+          const userData = JSON.parse(userJson);
+          setUser(userData);
+        } else {
+          // Explicitly set user to null if no user data found
+          setUser(null);
         }
+           //   // Mock user data matching the User type from AuthContext
+    //   const mockUser: User = {
+    //     id: '123456',
+    //     name: 'Nishant Mishra',
+    //     email: 'nishant@example.com',
+    //     employee_id: '1',
+    //     restaurant_id: '6c173e39-3ab5-4414-94aa-6af5174e6a9f',
+    //     role: 'manager',
+    //     location: 'Downtown Restaurant',
+    //     jobTitle: 'Head Chef',
+    //     profileImage: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=3077&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+    //   };
       } catch (error) {
-        console.error('Failed to load user from storage', error);
+        console.error('Error loading user from storage:', error);
+        // Set user to null on error
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUser();
-  }, []);
+    loadUserFromStorage();
+  }, []); // Run once when component mounts
+
+  // Keep the fetchCertificates useEffect separate since it depends on user data
+  useEffect(() => {
+    console.log("user aaya", user);
+  }, [user]); // Run when user changes
 
   // Login function
   const login = async (email: string, password: string) => {
@@ -64,8 +90,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: '123456',
         name: 'Nishant Mishra',
         email: email,
-        role: email.includes('manager') ? 'manager' : 'employee',
-        employeeId: 'EMP12345',
+        employee_id: '1',
+        restaurant_id: '6c173e39-3ab5-4414-94aa-6af5174e6a9f',
+        // role: email.includes('manager') ? 'manager' : 'employee',
+        role: 'manager',
         location: 'Downtown Restaurant',
         jobTitle: 'Head Chef',
         profileImage: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=3077&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
@@ -97,7 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: userData.name,
         email: userData.email,
         role: userData.role,
-        employeeId: userData.employeeId,
+        employee_id: userData.employee_id,
+        restaurant_id: userData.restaurant_id,
         location: userData.location,
         jobTitle: userData.jobTitle,
         profileImage: userData.profileImage
@@ -123,6 +152,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear user from state and AsyncStorage
       setUser(null);
       await AsyncStorage.removeItem('@user');
+      // Clear role preference to force role selection on next login
+      await AsyncStorage.removeItem('@user_role_preference');
+      await AsyncStorage.removeItem('@temp_user_role');
       
     } catch (error) {
       console.error('Logout failed', error);

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  ActivityIndicator
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -13,24 +14,47 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function RoleScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isSignedIn, isLoading } = useAuth();
   const [rememberChoice, setRememberChoice] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (isSignedIn) {
+      router.replace('/(tabs)');
+    }
+  }, [isSignedIn]);
 
   const handleRoleSelect = async (role: 'manager' | 'employee') => {
-    console.log('Selected role:', role);
-    
-    // Always save the current selection temporarily
-    await AsyncStorage.setItem('@temp_user_role', role);
-    
-    // If remember choice is checked, save it permanently
-    if (rememberChoice) {
-      console.log('Saving role preference');
-      await AsyncStorage.setItem('@user_role_preference', role);
+    try {
+      setIsSubmitting(true);
+      console.log('Selected role:', role);
+      
+      // Always save the current selection temporarily
+      await AsyncStorage.setItem('@temp_user_role', role);
+      
+      // If remember choice is checked, save it permanently
+      if (rememberChoice) {
+        console.log('Saving role preference');
+        await AsyncStorage.setItem('@user_role_preference', role);
+      }
+      
+      // Navigate to the login screen
+      router.replace('/auth/login');
+    } catch (error) {
+      console.error('Error selecting role:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Navigate to the main app flow
-    router.replace('/(tabs)');
   };
+
+  if (isLoading || isSignedIn) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4299E1" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -43,15 +67,25 @@ export default function RoleScreen() {
         <TouchableOpacity 
           style={styles.roleButton}
           onPress={() => handleRoleSelect('manager')}
+          disabled={isSubmitting}
         >
-          <Text style={styles.roleButtonText}>Manager</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.roleButtonText}>Manager</Text>
+          )}
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.roleButton}
           onPress={() => handleRoleSelect('employee')}
+          disabled={isSubmitting}
         >
-          <Text style={styles.roleButtonText}>Employee</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.roleButtonText}>Employee</Text>
+          )}
         </TouchableOpacity>
         
         <View style={styles.rememberContainer}>
@@ -72,6 +106,12 @@ export default function RoleScreen() {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: '#F9FAFB',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
       backgroundColor: '#F9FAFB',
     },
     content: {

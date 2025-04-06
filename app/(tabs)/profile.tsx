@@ -4,8 +4,20 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/context/AuthContext';
+
 
 export default function ProfileScreen() {
+  const { logout, isLoading } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+  
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
       <StatusBar style="dark" />
@@ -65,6 +77,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           className="bg-red-500 rounded-xl p-4 items-center mt-6"
+          onPress={handleLogout}
         >
           <Text className="text-white font-semibold text-base">Logout</Text>
         </TouchableOpacity>

@@ -18,7 +18,7 @@ export const Header = () => {
         </View>
         <View className="w-10" />
       </View>
-      
+
       <View className="pr-4 pb-0 flex-row items-center bg-[#ECF6FF]">
         <Image
           source={require('@/assets/images/riskManagement/delo_wave.png')}

@@ -39,7 +39,7 @@
 // }
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { useRouter, Slot } from 'expo-router';
+import { useRouter, Slot, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -65,20 +65,22 @@ SplashScreen.preventAutoHideAsync();
 function AuthHandler({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoading } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
 
-  // useEffect(() => {
-  //   if (isLoading) return;
+  useEffect(() => {
+    if (isLoading) return;
 
-  //   const inAuthGroup = segments[0] === 'auth';
+    const inAuthGroup = segments[0] === 'auth';
+    const inRoleScreen = segments[0] === 'role';
 
-  //   if (!isSignedIn && !inAuthGroup) {
-  //     // Redirect to login if not signed in and not already on an auth screen
-  //     router.replace('/auth/login');
-  //   } else if (isSignedIn && inAuthGroup) {
-  //     // Redirect to home when signed in but on an auth screen
-  //     router.replace('/(tabs)');
-  //   }
-  // }, [isSignedIn, isLoading, segments]);
+    if (!isSignedIn && !inAuthGroup && !inRoleScreen) {
+      // When not signed in, go to role selection instead of login
+      router.replace('/role');
+    } else if (isSignedIn && (inAuthGroup || inRoleScreen)) {
+      // Redirect to home when signed in but on an auth screen
+      router.replace('/(tabs)');
+    }
+  }, [isSignedIn, isLoading, segments]);
 
   if (isLoading) {
     return (
@@ -120,15 +122,27 @@ export default function RootLayout() {
   const checkInitialRoute = async () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 100)); // ✅ Ensure router is ready
-      const savedRole = await AsyncStorage.getItem('@user_role_preference');
-  
-      if (savedRole) {
+      const userJson = await AsyncStorage.getItem('@user');
+      
+      if (userJson) {
+        // User is logged in, go to tabs
         router.replace('/(tabs)');
       } else {
-        router.replace('/role');
+        // Check if user has selected a role
+        const savedRole = await AsyncStorage.getItem('@user_role_preference');
+        
+        if (savedRole) {
+          // User has selected a role but not logged in, go to login
+          router.replace('/auth/login');
+        } else {
+          // User hasn't selected a role, go to role selection
+          router.replace('/role');
+        }
       }
     } catch (error) {
       console.error('Error checking initial route:', error);
+      // Default to login if there's an error
+      router.replace('/auth/login');
     }
   };
 

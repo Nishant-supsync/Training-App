@@ -49,7 +49,8 @@ export default function SignupScreen() {
         name,
         email,
         password,
-        employeeId,
+        employee_id: employeeId,
+        restaurant_id: '6c173e39-3ab5-4414-94aa-6af5174e6a9f',
         jobTitle,
         location,
         role

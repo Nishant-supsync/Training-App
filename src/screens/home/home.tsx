@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
-  Image, 
-  TextInput, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  TextInput,
   Keyboard,
-  KeyboardAvoidingView, 
+  KeyboardAvoidingView,
   Platform,
   Dimensions
 } from 'react-native';
@@ -17,6 +17,9 @@ import { useRouter } from 'expo-router';
 import { Bell, Book, AlertTriangle, Search } from 'lucide-react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '@/src/api/apiService';
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,6 +32,10 @@ export default function HomeScreen() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const { height: screenHeight } = Dimensions.get('window');
+  const [myCertificates, setMyCertificates] = useState<MyCertificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Type definitions for our data
   type CertificateStatus = {
@@ -38,11 +45,28 @@ export default function HomeScreen() {
     text: string;
   };
 
+  type ApiCertificate = {
+    id: number;
+    certificate_url: string;
+    name: string;
+    restaurant_employee_id: number;
+    status: string;
+    certificate_category_id: number;
+    renewal_frequency: number;
+    date_of_training: number;
+    issue_date: number;
+    expiry_date: number;
+    name_of_the_recipient: string;
+    is_delete: boolean;
+  };
+
   type MyCertificate = {
     id: string;
     name: string;
     status: CertificateStatus;
     expiryDate?: string;
+    certificateUrl?: string;
+    recipientName?: string;
   };
 
   type EmployeeCertificate = {
@@ -51,6 +75,18 @@ export default function HomeScreen() {
     certificateName: string;
     status: CertificateStatus;
     expiryDate?: string;
+  };
+
+  // First, let's add the type definition for InspectionCertificate
+  type InspectionCertificate = {
+    id: number;
+    certificate_url: string;
+    date_of_inspection: number;
+    frequency: string;
+    restaurant_id: number;
+    uploaded_by: number;
+    inspection_certificate_category_id: number;
+    created_at: number;
   };
 
   // Helper function to get greeting based on time of day
@@ -70,44 +106,44 @@ export default function HomeScreen() {
   };
 
   // Mock certificates data
-  const myCertificates: MyCertificate[] = [
-    {
-      id: '1',
-      name: 'Food Handler Certificate',
-      status: certificateStatus.VALID,
-      expiryDate: '2025-07-15'
-    },
-    {
-      id: '2',
-      name: 'Fire Safety Training',
-      status: certificateStatus.UPCOMING,
-      expiryDate: '2024-05-10'
-    },
-    {
-      id: '3',
-      name: 'First Aid Certification',
-      status: certificateStatus.OVERDUE,
-      expiryDate: '2024-02-01'
-    },
-    {
-      id: '4',
-      name: 'Workplace Safety Training',
-      status: certificateStatus.VALID,
-      expiryDate: '2025-03-20'
-    },
-    {
-      id: '5',
-      name: 'Food Allergen Awareness',
-      status: certificateStatus.UPCOMING,
-      expiryDate: '2024-06-15'
-    },
-    {
-      id: '6',
-      name: 'ServSafe Manager Certification',
-      status: certificateStatus.VALID,
-      expiryDate: '2025-09-30'
-    }
-  ];
+  // const myCertificates: MyCertificate[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Food Handler Certificate',
+  //     status: certificateStatus.VALID,
+  //     expiryDate: '2025-07-15'
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Fire Safety Training',
+  //     status: certificateStatus.UPCOMING,
+  //     expiryDate: '2024-05-10'
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'First Aid Certification',
+  //     status: certificateStatus.OVERDUE,
+  //     expiryDate: '2024-02-01'
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Workplace Safety Training',
+  //     status: certificateStatus.VALID,
+  //     expiryDate: '2025-03-20'
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Food Allergen Awareness',
+  //     status: certificateStatus.UPCOMING,
+  //     expiryDate: '2024-06-15'
+  //   },
+  //   {
+  //     id: '6',
+  //     name: 'ServSafe Manager Certification',
+  //     status: certificateStatus.VALID,
+  //     expiryDate: '2025-09-30'
+  //   }
+  // ];
 
   const employeeCertificates: EmployeeCertificate[] = [
     {
@@ -187,7 +223,7 @@ export default function HomeScreen() {
         }
       }
     );
-    
+
     const keyboardDidHideListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
@@ -210,12 +246,13 @@ export default function HomeScreen() {
   }, [activeTab, keyboardVisible]);
 
   useEffect(() => {
-    async function checkRole() {
-      const savedRole = await AsyncStorage.getItem('@temp_user_role');
-      setIsManager(savedRole === 'manager');
-    }
-    checkRole();
-  }, []);
+    console.log("user.role",user?.role)
+    setIsManager(user?.role === 'manager');
+  }, [user?.role]);
+
+  useEffect(() => {
+    fetchCertificates();
+  },[])
 
   interface InfoCardProps {
     label: string;
@@ -247,15 +284,149 @@ export default function HomeScreen() {
   // Calculate content container padding for scroll view
   const getContentContainerStyle = () => {
     const basePadding = 20;
-    return { 
-      paddingBottom: keyboardVisible 
-        ? Math.max(keyboardHeight * 0.5, 120) 
-        : basePadding 
+    return {
+      paddingBottom: keyboardVisible
+        ? Math.max(keyboardHeight * 0.5, 120)
+        : basePadding
     };
   };
 
+  const fetchCertificates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get restaurant ID and employee ID from auth context
+      const restaurantId = user?.restaurant_id;
+      const employeeId = user?.employee_id;
+
+      // Fetch user certificates
+      const userCertsResponse = await api.get(
+        API_ENDPOINTS.USER_CERTIFICATES,
+        {
+          params: {
+            restaurant_id: restaurantId,
+            employee_id: employeeId,
+          }
+        }
+      );
+
+      let allCertificates: any[] | ((prevState: { id: string; name: string; status: { color: string; textColor: string; dot: string; text: string; }; expiryDate?: string; certificateUrl?: string; recipientName?: string; }[]) => { id: string; name: string; status: { color: string; textColor: string; dot: string; text: string; }; expiryDate?: string; certificateUrl?: string; recipientName?: string; }[]) = [];
+
+      console.log("userCertsResponse", userCertsResponse.data)
+      // Process user certificates
+      if (userCertsResponse.data.status && Array.isArray(userCertsResponse.data.data)) {
+        const userCertificates = userCertsResponse.data.data.map((cert: ApiCertificate) => ({
+          id: String(cert.id),
+          name: cert.name,
+          status: determineCertificateStatus(cert),
+          expiryDate: cert.expiry_date ? new Date(cert.expiry_date).toISOString() : undefined,
+          certificateUrl: cert.certificate_url,
+          recipientName: cert.name_of_the_recipient,
+          type: 'user' // Add type to distinguish between certificate types
+        }));
+        allCertificates = [...userCertificates];
+      }
+
+      // If user is manager, fetch inspection certificates
+      if (isManager) {
+        try {
+          const inspectionCertsResponse = await api.get(
+            API_ENDPOINTS.INSPECTION_CERTIFICATES,
+            {
+              params: {
+                restaurant_id: restaurantId,
+                employee_id: Number(employeeId),
+                // inspection_category_id: 0
+              }
+            }
+          );
+
+          console.log("inspectionCertsResponse", inspectionCertsResponse.data)
+
+
+          if (inspectionCertsResponse.data.status && Array.isArray(inspectionCertsResponse.data.data)) {
+            const inspectionCertificates = inspectionCertsResponse.data.data.map((cert: InspectionCertificate) => ({
+              id: String(cert.id),
+              name: `Inspection Certificate ${cert.inspection_certificate_category_id}`, // You might want to map category IDs to names
+              status: determineInspectionCertificateStatus(cert),
+              expiryDate: calculateExpiryDate(cert.date_of_inspection, cert.frequency),
+              certificateUrl: cert.certificate_url,
+              type: 'inspection' // Add type to distinguish between certificate types
+            }));
+            allCertificates = [...allCertificates, ...inspectionCertificates];
+          }
+        } catch (inspectionErr) {
+          console.error('Error fetching inspection certificates:', inspectionErr);
+          // Don't set error state here as we still have user certificates
+        }
+      }
+
+      setMyCertificates(allCertificates);
+    } catch (err) {
+      console.error('Error fetching certificates:', err);
+      setError('An error occurred while fetching certificates');
+      setMyCertificates([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const determineCertificateStatus = (cert: ApiCertificate): CertificateStatus => {
+    if (!cert.expiry_date) {
+      return certificateStatus.NOT_SUBMITTED;
+    }
+
+    const expiryDate = new Date(cert.expiry_date);
+    const today = new Date();
+
+    // If already expired
+    if (expiryDate < today) {
+      return certificateStatus.OVERDUE;
+    }
+
+    // If expiring within 30 days
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+    if (expiryDate <= thirtyDaysFromNow) {
+      return certificateStatus.UPCOMING;
+    }
+
+    // Otherwise valid
+    return certificateStatus.VALID;
+  };
+
+  // Helper function to determine inspection certificate status
+  const determineInspectionCertificateStatus = (cert: InspectionCertificate): CertificateStatus => {
+    const inspectionDate = new Date(cert.date_of_inspection);
+    const frequency = parseInt(cert.frequency);
+    const expiryDate = new Date(inspectionDate);
+    expiryDate.setMonth(expiryDate.getMonth() + frequency);
+
+    const today = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+    if (expiryDate < today) {
+      return certificateStatus.OVERDUE;
+    } else if (expiryDate <= thirtyDaysFromNow) {
+      return certificateStatus.UPCOMING;
+    } else {
+      return certificateStatus.VALID;
+    }
+  };
+
+  // Helper function to calculate expiry date based on inspection date and frequency
+  const calculateExpiryDate = (dateOfInspection: number, frequency: string): string => {
+    const inspectionDate = new Date(dateOfInspection);
+    const expiryDate = new Date(inspectionDate);
+    expiryDate.setMonth(expiryDate.getMonth() + parseInt(frequency));
+    return expiryDate.toISOString();
+  };
+
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
@@ -348,37 +519,65 @@ export default function HomeScreen() {
 
             {/* Certificate List */}
             {activeTab === 'your' ? (
-              <ScrollView 
-                ref={scrollViewRef}
-                className="flex-1" 
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                <View>
-                  {myCertificates.map((cert) => (
-                    <View
-                      key={cert.id}
-                      className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 ${cert.status.color}`}
-                    >
-                      <View>
-                        <Text className="font-medium text-base">{cert.name}</Text>
-                        <View className="flex-row items-center mt-1">
-                          <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
-                          <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
-                        </View>
-                        {cert.expiryDate && (
-                          <Text className="text-gray-500 text-xs mt-1">
-                            Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
-                          </Text>
-                        )}
-                      </View>
-                      <TouchableOpacity className="bg-white px-4 py-2 rounded-lg shadow-sm">
-                        <Text className="text-blue-600 font-medium">Upload</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+              loading ? (
+                <View className="flex-1 justify-center items-center">
+                  <Text className="text-gray-500">Loading certificates...</Text>
                 </View>
-              </ScrollView>
+              ) : error ? (
+                <View className="flex-1 justify-center items-center p-4">
+                  <AlertTriangle size={48} color="#ef4444" />
+                  <Text className="mt-4 text-red-500 text-center">{error}</Text>
+                  <TouchableOpacity
+                    className="mt-4 bg-blue-500 px-4 py-2 rounded-lg"
+                    onPress={fetchCertificates}
+                  >
+                    <Text className="text-white font-medium">Try Again</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <ScrollView
+                  ref={scrollViewRef}
+                  className="flex-1"
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {myCertificates.length > 0 ? (
+                    <View>
+                      {myCertificates.map((cert) => (
+                        <View
+                          key={cert.id}
+                          className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 ${cert.status.color}`}
+                        >
+                          <View>
+                            <Text className="font-medium text-base">{cert.name}</Text>
+                            {cert.recipientName && (
+                              <Text className="text-gray-500 text-xs mb-1">{cert.recipientName}</Text>
+                            )}
+                            <View className="flex-row items-center mt-1">
+                              <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
+                              <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
+                            </View>
+                            {cert.expiryDate && (
+                              <Text className="text-gray-500 text-xs mt-1">
+                                Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
+                              </Text>
+                            )}
+                          </View>
+                          <TouchableOpacity className="bg-white px-4 py-2 rounded-lg shadow-sm">
+                            <Text className="text-blue-600 font-medium">
+                              {cert.certificateUrl ? 'View' : 'Upload'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <View className="items-center justify-center py-8">
+                      <Text className="text-gray-500">No certificates found</Text>
+                    </View>
+                  )}
+                </ScrollView>
+              )
             ) : (
               <View className="flex-1">
                 {/* Always keep the search bar visible when in employee tab */}
@@ -401,10 +600,10 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                
-                <ScrollView 
+
+                <ScrollView
                   ref={scrollViewRef}
-                  className="flex-1" 
+                  className="flex-1"
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={getContentContainerStyle()}
@@ -428,7 +627,7 @@ export default function HomeScreen() {
                             </Text>
                           )}
                         </View>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           className="bg-white px-4 py-2 rounded-lg shadow-sm"
                           onPress={() => {
                             Keyboard.dismiss();
