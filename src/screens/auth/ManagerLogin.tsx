@@ -54,7 +54,7 @@ export default function LoginScreen() {
         return;
       }
 
-      await login(email, password);
+      await login(email, password, selectedRole);
 
       // Check if login was successful by checking if user is set
       const userJson = await AsyncStorage.getItem('@user');
@@ -169,7 +169,6 @@ export default function LoginScreen() {
                   secureTextEntry={!isPasswordVisible}
                   value={password}
                   onChangeText={setPassword}
-                  style={{ lineHeight: 24 }}
                 />
                 <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
                   <Ionicons

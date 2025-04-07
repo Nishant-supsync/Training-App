@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isSignedIn: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role: string) => Promise<void>;
   signup: (userData: Omit<User, 'id'> & { password: string }) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -78,10 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]); // Run when user changes
 
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role: string) => {
     try {
       setIsLoading(true);
-      
       // In a real app, this would be an API call to authenticate
       // For demo purposes, we'll simulate successful authentication with mock data
       
@@ -93,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         employee_id: '1',
         restaurant_id: '6c173e39-3ab5-4414-94aa-6af5174e6a9f',
         // role: email.includes('manager') ? 'manager' : 'employee',
-        role: 'manager',
+        role: role as UserRole,
         location: 'Downtown Restaurant',
         jobTitle: 'Head Chef',
         profileImage: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=3077&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
