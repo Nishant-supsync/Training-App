@@ -329,7 +329,7 @@ export default function HomeScreen() {
       }
 
       // If user is manager, fetch inspection certificates
-      if (isManager) {
+      if (user?.role === 'manager') {
         try {
           const inspectionCertsResponse = await api.get(
             API_ENDPOINTS.INSPECTION_CERTIFICATES,
@@ -347,7 +347,7 @@ export default function HomeScreen() {
 
           if (inspectionCertsResponse.data.status && Array.isArray(inspectionCertsResponse.data.data)) {
             const inspectionCertificates = inspectionCertsResponse.data.data.map((cert: InspectionCertificate) => ({
-              id: String(cert.id),
+              id: `inspection_${String(cert.id)}`,
               name: `Inspection Certificate ${cert.inspection_certificate_category_id}`, // You might want to map category IDs to names
               status: determineInspectionCertificateStatus(cert),
               expiryDate: calculateExpiryDate(cert.date_of_inspection, cert.frequency),
