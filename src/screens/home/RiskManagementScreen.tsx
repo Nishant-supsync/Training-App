@@ -114,7 +114,7 @@
 
 //   return (
 //     <SafeAreaView className="flex-1 bg-[#EBF2F7]"> {/* Exact background color from image */}
-//       <StatusBar style="dark" />
+//       <StatusBar style="dark" backgroundColor='#ECF6FF'/>
 
 //       {/* Header */}
 //       <View className="flex-row items-center justify-between px-4 py-3">
@@ -267,7 +267,7 @@ export default function RiskManagementScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#EBF2F7]">
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3">

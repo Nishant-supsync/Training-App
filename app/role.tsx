@@ -39,8 +39,12 @@ export default function RoleScreen() {
         await AsyncStorage.setItem('@user_role_preference', role);
       }
       
-      // Navigate to the login screen
-      router.replace('/auth/login');
+      // Navigate to the appropriate login screen based on role
+      if (role === 'manager') {
+        router.replace('/auth/managerLogin');
+      } else {
+        router.replace('/auth/login');
+      }
     } catch (error) {
       console.error('Error selecting role:', error);
     } finally {
@@ -58,7 +62,7 @@ export default function RoleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
       
       <View style={styles.content}>
         <Text style={styles.title}>Welcome</Text>

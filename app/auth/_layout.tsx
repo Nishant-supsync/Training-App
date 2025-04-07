@@ -12,6 +12,13 @@ export default function AuthLayout() {
         }} 
       />
       <Stack.Screen 
+        name="managerLogin" 
+        options={{ 
+          headerShown: false,
+          title: 'Manager Login',
+        }} 
+      />
+      <Stack.Screen 
         name="signup" 
         options={{ 
           headerShown: false,

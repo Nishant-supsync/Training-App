@@ -20,7 +20,7 @@ export default function ProfileScreen() {
   
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
       <ScrollView
         className="px-4"
         contentContainerStyle={{ paddingBottom: 100 }}

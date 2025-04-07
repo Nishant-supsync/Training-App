@@ -59,7 +59,7 @@ export default function EmployeeListScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-[#ECF6FF]">

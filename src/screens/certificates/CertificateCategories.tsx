@@ -104,7 +104,7 @@ export function CertificateCategoriesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
 
       <View className="bg-[#ECF6FF] py-4 px-4 flex-row items-center">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">

@@ -432,7 +432,7 @@ export default function HomeScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <SafeAreaView className="flex-1 bg-[#F5F5FA]">
-        <StatusBar />
+        <StatusBar style="dark"/>
 
         {/* Header - Conditionally hide header when keyboard is visible on Android */}
         <View className={`p-4 ${Platform.OS === 'android' && keyboardVisible && activeTab === 'employee' ? 'hidden' : ''}`}>

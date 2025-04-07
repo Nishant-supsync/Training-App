@@ -284,7 +284,7 @@ export function EmployeeCertificatesScreen() {
     <SafeAreaView
       className="flex-1 bg-white"
     >
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
 
       {/* Header - Light blue background */}
       <View

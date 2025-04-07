@@ -307,7 +307,7 @@ export default function CertificatesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
       
       <View style={styles.header}>
         <TouchableOpacity 

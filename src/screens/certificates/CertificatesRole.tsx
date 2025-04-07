@@ -37,7 +37,7 @@ export function RoleSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
       
       <View style={styles.content}>
         <Text style={styles.title}>Select Your Role</Text>
