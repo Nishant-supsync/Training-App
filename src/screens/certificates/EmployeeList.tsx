@@ -11,6 +11,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Search, ChevronRight, ArrowRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import api from '@/src/api/apiService';
+import { useAuth } from '@/context/AuthContext';
+
 
 type Employee = {
   id: string;
@@ -21,18 +25,47 @@ type Employee = {
 
 export default function EmployeeListScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+
   const { category, categoryName } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'withCert' | 'withoutCert'>('all');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: '1', name: 'John Doe', department: 'Kitchen', certificateCount: 2 },
-    { id: '2', name: 'Jane Smith', department: 'Service', certificateCount: 0 },
-    { id: '3', name: 'Mike Johnson', department: 'Management', certificateCount: 3 },
-    { id: '4', name: 'Sarah Williams', department: 'Kitchen', certificateCount: 0 },
-    { id: '5', name: 'Cameron Williamson', department: 'Kitchen', certificateCount: 1 },
-    { id: '6', name: 'Alex Paul', department: 'Service', certificateCount: 2 }
-  ]);
+  const fetchEmployees = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get(API_ENDPOINTS.EMPLOYEES_LIST, {
+        params: {
+          restuarant_id: user?.restaurant_id,
+          category_id: category
+        }
+      });
+      
+      // Transform the API response to match our Employee interface
+      const transformedEmployees = response.data.map((emp: any) => ({
+        id: emp.id.toString(),
+        name: emp.name,
+        department: emp.role === 1 ? 'Employee' : 'Manager', // Adjust based on your role mapping
+        certificateCount: emp.certificate || 0
+      }));
+      
+      setEmployees(transformedEmployees);
+    } catch (err) {
+      setError('Failed to fetch employees');
+      console.error('Error fetching employees:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Replace these with actual IDs from your route params or props
+    fetchEmployees();
+  }, []);
 
   const handleEmployeeSelect = (employee: Employee) => {
     router.push({

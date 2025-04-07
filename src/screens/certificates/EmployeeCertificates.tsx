@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Modal,
-  Platform,
   StatusBar as RNStatusBar,
-  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Plus, Search, Calendar, X, Trash, ArrowLeft } from 'lucide-react-native';
+import { Plus, Search, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import api from '@/src/api/apiService';
+import { useAuth } from '@/context/AuthContext';
+import { CertificateUploadModal } from './CertificateUploadModal';
 
 type CertificateType = {
   id: string;
@@ -23,43 +23,69 @@ type CertificateType = {
   size: string;
 };
 
-type FileType = {
+type ApiCertificateType = {
+  id: number;
+  certificate_url: string;
   name: string;
-  size: string;
-  date: string;
-} | null;
-
-type CertificateDataType = {
-  title: string;
-  issueDate: string;
-  expiryDate: string;
-  recipientName: string;
-  restaurantAccount: string;
-  file: FileType;
+  restaurant_employee_id: number;
+  status: string;
+  certificate_category_id: number;
+  renewal_frequency: number;
+  date_of_training: number;
+  issue_date: number;
+  expiry_date: number;
+  name_of_the_recipient: string;
+  is_delete: boolean;
 };
 
 export function EmployeeCertificatesScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { id, category, categoryName, employeeName, role } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<null | 'uploading' | 'success'>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [certificates, setCertificates] = useState<CertificateType[]>([
-    { id: '1', name: 'Certificate_abc.pdf', date: '10/06/2023', size: '321 KB' },
-    { id: '2', name: 'Certificate_efg.pdf', date: '10/06/2023', size: '321 KB' },
-    { id: '3', name: 'Certificate_hij.pdf', date: '10/06/2023', size: '321 KB' },
-    { id: '4', name: 'Certificate_xyz.pdf', date: '10/06/2023', size: '321 KB' },
-  ]);
+  const [certificates, setCertificates] = useState<CertificateType[]>([]);
 
-  const [certificateData, setCertificateData] = useState<CertificateDataType>({
-    title: '',
-    issueDate: '',
-    expiryDate: '',
-    recipientName: '',
-    restaurantAccount: '',
-    file: null
-  });
+  // Fetch certificates from API
+  const fetchCertificates = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get(API_ENDPOINTS.USER_CERTIFICATES, {
+        params: {
+          restaurant_id: user?.restaurant_id,
+          employee_id: id,
+          category_id: category
+        }
+      });
+      
+      if (response.data.status && response.data.data) {
+        // Transform API response to match our CertificateType
+        const transformedCertificates = response.data.data.map((cert: ApiCertificateType) => ({
+          id: cert.id.toString(),
+          name: cert.name,
+          date: new Date(cert.expiry_date).toLocaleDateString(),
+          size: 'Unknown' // API doesn't provide size, so we'll use a placeholder
+        }));
+        
+        setCertificates(transformedCertificates);
+      } else {
+        setError('Failed to fetch certificates');
+      }
+    } catch (err) {
+      console.error('Error fetching certificates:', err);
+      setError('Failed to fetch certificates');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [id, category]);
 
   // Filter certificates based on search
   const filteredCertificates = searchQuery
@@ -68,223 +94,16 @@ export function EmployeeCertificatesScreen() {
     )
     : certificates;
 
-  const handleInputChange = (field: keyof CertificateDataType, value: string) => {
-    setCertificateData({
-      ...certificateData,
-      [field]: value
-    });
+  const handleUploadSuccess = () => {
+    // Refresh the certificates list after successful upload
+    fetchCertificates();
   };
-
-  const handleChooseFile = () => {
-    // This would integrate with DocumentPicker in a real app
-    setCertificateData({
-      ...certificateData,
-      file: {
-        name: 'Certificate_xyz.pdf',
-        size: '321 KB',
-        date: '10/06/2023'
-      }
-    });
-  };
-
-  const handleRemoveFile = () => {
-    setCertificateData({
-      ...certificateData,
-      file: null
-    });
-  };
-
-  const handleUpload = () => {
-    setUploadStatus('uploading');
-
-    // Simulate upload
-    setTimeout(() => {
-      setUploadStatus('success');
-
-      // Add the new certificate to the list
-      const newCertificate = {
-        id: String(certificates.length + 1),
-        name: certificateData.file?.name || 'Certificate.pdf',
-        date: certificateData.file?.date || new Date().toLocaleDateString(),
-        size: certificateData.file?.size || '0 KB',
-      };
-
-      setCertificates([newCertificate, ...certificates]);
-
-      // Reset form after successful upload
-      setTimeout(() => {
-        setUploadStatus(null);
-        setShowUploadModal(false);
-        setCertificateData({
-          title: '',
-          issueDate: '',
-          expiryDate: '',
-          recipientName: '',
-          restaurantAccount: '',
-          file: null
-        });
-      }, 2000);
-    }, 1500);
-  };
-
-  // Success view for the modal
-  const renderSuccessView = () => (
-    <View className="flex-1 bg-white p-5">
-      <View className="flex-row bg-[#F0FFF4] items-center p-4 rounded-lg border border-[#C6F6D5] mb-6">
-        <View className="w-6 h-6 rounded-full bg-[#68D391] items-center justify-center mr-3">
-          <Text className="text-white font-bold">✓</Text>
-        </View>
-        <Text className="text-[#276749] font-medium">Your Certificate has been uploaded!</Text>
-      </View>
-
-      <View className="bg-white rounded-lg p-4 shadow">
-        <Text className="text-[#718096] mb-3">Certificate</Text>
-        <View className="flex-row items-center">
-          <View className="w-10 h-12 justify-center items-center mr-3">
-            <View className="bg-[#F56565] rounded-sm w-10 h-6 items-center justify-center">
-              <Text className="text-white text-xs font-bold">PDF</Text>
-            </View>
-          </View>
-          <View>
-            <Text className="font-medium">{certificateData.file?.name}</Text>
-            <Text className="text-[#718096] text-sm">
-              {certificateData.file?.date} · {certificateData.file?.size}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-
-  // Upload form for the modal
-  const renderUploadForm = () => (
-    <ScrollView className="bg-white px-5">
-      <View className="py-4">
-        <Text className="text-[#718096] mb-2">Title</Text>
-        <TextInput
-          className="border border-[#E2E8F0] rounded-lg p-3 text-base bg-white"
-          placeholder="Enter your title"
-          placeholderTextColor="#A0AEC0"
-          value={certificateData.title}
-          onChangeText={(text) => handleInputChange('title', text)}
-        />
-      </View>
-
-      <View className="py-2">
-        <Text className="text-[#718096] mb-2">Issue Date</Text>
-        <View className="border border-[#E2E8F0] rounded-lg flex-row items-center px-3">
-          <TextInput
-            className="flex-1 p-3 text-base"
-            placeholder="MM/DD/YY"
-            placeholderTextColor="#A0AEC0"
-            value={certificateData.issueDate}
-            onChangeText={(text) => handleInputChange('issueDate', text)}
-          />
-          <Calendar size={20} color="#A0AEC0" />
-        </View>
-      </View>
-
-      <View className="py-2">
-        <Text className="text-[#718096] mb-2">Expiry Date</Text>
-        <View className="border border-[#E2E8F0] rounded-lg flex-row items-center px-3">
-          <TextInput
-            className="flex-1 p-3 text-base"
-            placeholder="MM/DD/YY"
-            placeholderTextColor="#A0AEC0"
-            value={certificateData.expiryDate}
-            onChangeText={(text) => handleInputChange('expiryDate', text)}
-          />
-          <Calendar size={20} color="#A0AEC0" />
-        </View>
-      </View>
-
-      <View className="py-2">
-        <Text className="text-[#718096] mb-2">Name Of Recipient</Text>
-        <TextInput
-          className="border border-[#E2E8F0] rounded-lg p-3 text-base"
-          placeholder="Enter recipient name"
-          placeholderTextColor="#A0AEC0"
-          value={certificateData.recipientName}
-          onChangeText={(text) => handleInputChange('recipientName', text)}
-        />
-      </View>
-
-      <View className="py-2">
-        <Text className="text-[#718096] mb-2">Restaurant/Bar Account</Text>
-        <TextInput
-          className="border border-[#E2E8F0] rounded-lg p-3 text-base"
-          placeholder="Restaurant/bar Account they belong to"
-          placeholderTextColor="#A0AEC0"
-          value={certificateData.restaurantAccount}
-          onChangeText={(text) => handleInputChange('restaurantAccount', text)}
-        />
-      </View>
-
-      <View className="py-2 mb-4">
-        <Text className="text-[#718096] mb-2">Image/PDG Of The Certificate</Text>
-
-        {certificateData.file ? (
-          <View className="flex-row justify-between border border-[#E2E8F0] rounded-lg p-3">
-            <View className="flex-row items-center">
-              <View className="bg-[#F8F9FA] rounded-sm w-10 h-10 items-center justify-center">
-                <View className="bg-red-500 w-8 h-5 items-center justify-center">
-                  <Text className="text-white text-xs font-bold">PDF</Text>
-                </View>
-              </View>
-              <View className="ml-3">
-                <Text className="font-medium">{certificateData.file.name}</Text>
-                <Text className="text-[#718096] text-sm">
-                  {certificateData.file.date} · {certificateData.file.size}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={handleRemoveFile}
-              className="w-8 h-8 bg-[#FFF5F5] rounded-full items-center justify-center"
-            >
-              <Trash size={20} color="#F56565" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View className="border border-[#E2E8F0] border-dashed rounded-lg p-6 items-center">
-            <View className="w-16 h-16 mb-3 items-center justify-center">
-              <Image
-                source={{ uri: 'https://cdn-icons-png.flaticon.com/512/337/337946.png' }}
-                className="w-12 h-12"
-                defaultSource={{ uri: 'https://via.placeholder.com/48' }}
-              />
-            </View>
-            <Text className="font-medium text-base mb-1">Upload Certificate</Text>
-            <Text className="text-[#718096] text-sm mb-4">.pdf, .docx, JPG and .csv are supported</Text>
-
-            <TouchableOpacity
-              className="bg-[#4299E1] py-2 px-4 rounded-md"
-              onPress={handleChooseFile}
-            >
-              <Text className="text-white font-medium">Choose File</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      <TouchableOpacity
-        className={`py-4 px-3 rounded-lg items-center mb-8 ${certificateData.file ? 'bg-[#4299E1]' : 'bg-[#A0AEC0]'
-          }`}
-        disabled={!certificateData.file}
-        onPress={handleUpload}
-      >
-        <Text className="text-white font-bold text-base">
-          {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload'}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
 
   return (
     <SafeAreaView
       className="flex-1 bg-white"
     >
-      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
+      <StatusBar style="dark" backgroundColor='#ECF6FF' />
 
       {/* Header - Light blue background */}
       <View
@@ -296,9 +115,16 @@ export function EmployeeCertificatesScreen() {
         >
           <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-semibold flex-1 text-center">
-          {employeeName || 'Cameron Williamson'}
-        </Text>
+        <View className="flex-1">
+          {role !== 'employee' && (
+            <Text className="text-xl font-semibold text-center">
+              {employeeName || 'Cameron Williamson'}
+            </Text>
+          )}
+          <Text className="text-sm text-[#718096] text-center">
+            {categoryName || 'Category'}
+          </Text>
+        </View>
         <TouchableOpacity
           className="w-7 h-7 rounded-md border border-[#44A8FF] items-center justify-center"
           onPress={() => setShowUploadModal(true)}
@@ -308,7 +134,15 @@ export function EmployeeCertificatesScreen() {
       </View>
 
       <ScrollView className="flex-1">
-        {certificates.length === 0 ? (
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center px-8 py-40">
+            <Text className="text-xl font-bold text-center mb-4">Loading...</Text>
+          </View>
+        ) : error ? (
+          <View className="flex-1 justify-center items-center px-8 py-40">
+            <Text className="text-xl font-bold text-center mb-4 text-red-500">{error}</Text>
+          </View>
+        ) : certificates.length === 0 ? (
           <View className="flex-1 justify-center items-center px-8 py-40">
             <Text className="text-xl font-bold text-center mb-4">No Certificate Available</Text>
             <Text className="text-[#4A5568] text-center">
@@ -361,46 +195,13 @@ export function EmployeeCertificatesScreen() {
       </ScrollView>
 
       {/* Upload Certificate Modal */}
-      <Modal
+      <CertificateUploadModal
         visible={showUploadModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowUploadModal(false)}
-      >
-        <View className="flex-1 "
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View
-            className="flex-1 mt-20 bg-white rounded-t-3xl overflow-hidden"
-          >
-            {/* Modal Header */}
-            <View className="flex-row justify-between items-center px-5 py-4 border-b border-[#E2E8F0]">
-              <Text className="text-xl font-bold">Upload Certificate</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowUploadModal(false);
-                  setUploadStatus(null);
-                  setCertificateData({
-                    title: '',
-                    issueDate: '',
-                    expiryDate: '',
-                    recipientName: '',
-                    restaurantAccount: '',
-                    file: null
-                  });
-                }}
-              >
-                <X size={24} color="#718096" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Modal Content */}
-            {uploadStatus === 'success'
-              ? renderSuccessView()
-              : renderUploadForm()
-            }
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowUploadModal(false)}
+        onSuccess={handleUploadSuccess}
+        employeeId={id as string}
+        categoryId={category as string}
+      />
     </SafeAreaView>
   );
 }

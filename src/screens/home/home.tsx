@@ -37,58 +37,6 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Type definitions for our data
-  type CertificateStatus = {
-    color: string;
-    textColor: string;
-    dot: string;
-    text: string;
-  };
-
-  type ApiCertificate = {
-    id: number;
-    certificate_url: string;
-    name: string;
-    restaurant_employee_id: number;
-    status: string;
-    certificate_category_id: number;
-    renewal_frequency: number;
-    date_of_training: number;
-    issue_date: number;
-    expiry_date: number;
-    name_of_the_recipient: string;
-    is_delete: boolean;
-  };
-
-  type MyCertificate = {
-    id: string;
-    name: string;
-    status: CertificateStatus;
-    expiryDate?: string;
-    certificateUrl?: string;
-    recipientName?: string;
-  };
-
-  type EmployeeCertificate = {
-    id: string;
-    employeeName: string;
-    certificateName: string;
-    status: CertificateStatus;
-    expiryDate?: string;
-  };
-
-  // First, let's add the type definition for InspectionCertificate
-  type InspectionCertificate = {
-    id: number;
-    certificate_url: string;
-    date_of_inspection: number;
-    frequency: string;
-    restaurant_id: number;
-    uploaded_by: number;
-    inspection_certificate_category_id: number;
-    created_at: number;
-  };
-
   // Helper function to get greeting based on time of day
   const getGreeting = () => {
     const hour = moment().hour();
@@ -145,68 +93,65 @@ export default function HomeScreen() {
   //   }
   // ];
 
-  const employeeCertificates: EmployeeCertificate[] = [
-    {
-      id: '1',
-      employeeName: 'Jane Smith',
-      certificateName: 'Food Handler Certificate',
-      status: certificateStatus.VALID,
-      expiryDate: '2025-06-20'
-    },
-    {
-      id: '2',
-      employeeName: 'Mike Johnson',
-      certificateName: 'First Aid Certification',
-      status: certificateStatus.OVERDUE,
-      expiryDate: '2024-01-15'
-    },
-    {
-      id: '3',
-      employeeName: 'Sarah Williams',
-      certificateName: 'Fire Safety Training',
-      status: certificateStatus.NOT_SUBMITTED
-    },
-    {
-      id: '4',
-      employeeName: 'Tom Brown',
-      certificateName: 'Food Allergen Awareness',
-      status: certificateStatus.VALID,
-      expiryDate: '2025-04-10'
-    },
-    {
-      id: '5',
-      employeeName: 'Emily Davis',
-      certificateName: 'Workplace Safety Training',
-      status: certificateStatus.UPCOMING,
-      expiryDate: '2024-04-30'
-    },
-    {
-      id: '6',
-      employeeName: 'Chris Wilson',
-      certificateName: 'ServSafe Manager Certification',
-      status: certificateStatus.OVERDUE,
-      expiryDate: '2024-01-01'
-    }
-  ];
+  // const employeeCertificates: EmployeeCertificate[] = [
+  //   {
+  //     id: '1',
+  //     employeeName: 'Jane Smith',
+  //     certificateName: 'Food Handler Certificate',
+  //     status: certificateStatus.VALID,
+  //     expiryDate: '2025-06-20'
+  //   },
+  //   {
+  //     id: '2',
+  //     employeeName: 'Mike Johnson',
+  //     certificateName: 'First Aid Certification',
+  //     status: certificateStatus.OVERDUE,
+  //     expiryDate: '2024-01-15'
+  //   },
+  //   {
+  //     id: '3',
+  //     employeeName: 'Sarah Williams',
+  //     certificateName: 'Fire Safety Training',
+  //     status: certificateStatus.NOT_SUBMITTED
+  //   },
+  //   {
+  //     id: '4',
+  //     employeeName: 'Tom Brown',
+  //     certificateName: 'Food Allergen Awareness',
+  //     status: certificateStatus.VALID,
+  //     expiryDate: '2025-04-10'
+  //   },
+  //   {
+  //     id: '5',
+  //     employeeName: 'Emily Davis',
+  //     certificateName: 'Workplace Safety Training',
+  //     status: certificateStatus.UPCOMING,
+  //     expiryDate: '2024-04-30'
+  //   },
+  //   {
+  //     id: '6',
+  //     employeeName: 'Chris Wilson',
+  //     certificateName: 'ServSafe Manager Certification',
+  //     status: certificateStatus.OVERDUE,
+  //     expiryDate: '2024-01-01'
+  //   }
+  // ];
 
   // Filter employee certificates based on search query
   useEffect(() => {
+    if (user?.role !== 'manager') return;
+    
     if (searchQuery.trim() === '') {
-      setFilteredEmployeeCerts(employeeCertificates);
+      fetchEmployeeCertificates();
     } else {
       const lowercaseQuery = searchQuery.toLowerCase();
-      const filtered = employeeCertificates.filter(cert =>
+      const filtered = filteredEmployeeCerts.filter(cert =>
         cert.employeeName.toLowerCase().includes(lowercaseQuery) ||
         cert.certificateName.toLowerCase().includes(lowercaseQuery)
       );
       setFilteredEmployeeCerts(filtered);
     }
   }, [searchQuery]);
-
-  // Initialize filtered certificates
-  useEffect(() => {
-    setFilteredEmployeeCerts(employeeCertificates);
-  }, []);
 
   // Enhanced keyboard handling
   useEffect(() => {
@@ -251,8 +196,14 @@ export default function HomeScreen() {
   }, [user?.role]);
 
   useEffect(() => {
-    fetchCertificates();
+    fetchUserCertificates();
   },[])
+
+  useEffect(() => {
+    if (user?.role === 'manager') {
+      fetchEmployeeCertificates();
+    }
+  }, [user?.role]);
 
   interface InfoCardProps {
     label: string;
@@ -291,7 +242,7 @@ export default function HomeScreen() {
     };
   };
 
-  const fetchCertificates = async () => {
+  const fetchUserCertificates = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -367,6 +318,48 @@ export default function HomeScreen() {
       console.error('Error fetching certificates:', err);
       setError('An error occurred while fetching certificates');
       setMyCertificates([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchEmployeeCertificates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get restaurant ID from auth context
+      const restaurantId = user?.restaurant_id;
+
+      // Fetch employee certificates
+      const employeeCertsResponse = await api.get(
+        API_ENDPOINTS.USER_CERTIFICATES,
+        {
+          params: {
+            restaurant_id: restaurantId
+          }
+        }
+      );
+
+      if (employeeCertsResponse.data.status && Array.isArray(employeeCertsResponse.data.data)) {
+        const employeeCerts = employeeCertsResponse.data.data.map((cert: ApiCertificate) => ({
+          id: String(cert.id),
+          employeeName: cert.name_of_the_recipient,
+          certificateName: cert.name,
+          status: determineCertificateStatus(cert),
+          expiryDate: cert.expiry_date ? new Date(cert.expiry_date).toISOString() : undefined,
+          certificateUrl: cert.certificate_url
+        }));
+        
+        console.log("employeeCerts",employeeCerts)
+        setFilteredEmployeeCerts(employeeCerts);
+      } else {
+        setFilteredEmployeeCerts([]);
+      }
+    } catch (err) {
+      console.error('Error fetching employee certificates:', err);
+      setError('An error occurred while fetching employee certificates');
+      setFilteredEmployeeCerts([]);
     } finally {
       setLoading(false);
     }
@@ -529,7 +522,7 @@ export default function HomeScreen() {
                   <Text className="mt-4 text-red-500 text-center">{error}</Text>
                   <TouchableOpacity
                     className="mt-4 bg-blue-500 px-4 py-2 rounded-lg"
-                    onPress={fetchCertificates}
+                    onPress={fetchUserCertificates}
                   >
                     <Text className="text-white font-medium">Try Again</Text>
                   </TouchableOpacity>
@@ -563,11 +556,11 @@ export default function HomeScreen() {
                               </Text>
                             )}
                           </View>
-                          <TouchableOpacity className="bg-white px-4 py-2 rounded-lg shadow-sm">
-                            <Text className="text-blue-600 font-medium">
-                              {cert.certificateUrl ? 'View' : 'Upload'}
-                            </Text>
-                          </TouchableOpacity>
+                          {cert.status.text !== 'Up to date' && (
+                            <TouchableOpacity className="bg-white px-4 py-2 rounded-lg shadow-sm">
+                              <Text className="text-blue-600 font-medium">Upload</Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
                       ))}
                     </View>
@@ -627,15 +620,17 @@ export default function HomeScreen() {
                             </Text>
                           )}
                         </View>
-                        <TouchableOpacity
-                          className="bg-white px-4 py-2 rounded-lg shadow-sm"
-                          onPress={() => {
-                            Keyboard.dismiss();
-                            // Handle upload functionality
-                          }}
-                        >
-                          <Text className="text-blue-600 font-medium">Upload</Text>
-                        </TouchableOpacity>
+                        {cert.status.text !== 'Up to date' && (
+                          <TouchableOpacity
+                            className="bg-white px-4 py-2 rounded-lg shadow-sm"
+                            onPress={() => {
+                              Keyboard.dismiss();
+                              // Handle upload functionality
+                            }}
+                          >
+                            <Text className="text-blue-600 font-medium">Upload</Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
                     ))
                   ) : (
@@ -652,3 +647,56 @@ export default function HomeScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+
+  // Type definitions for our data
+  type CertificateStatus = {
+    color: string;
+    textColor: string;
+    dot: string;
+    text: string;
+  };
+
+  type ApiCertificate = {
+    id: number;
+    certificate_url: string;
+    name: string;
+    restaurant_employee_id: number;
+    status: string;
+    certificate_category_id: number;
+    renewal_frequency: number;
+    date_of_training: number;
+    issue_date: number;
+    expiry_date: number;
+    name_of_the_recipient: string;
+    is_delete: boolean;
+  };
+
+  type MyCertificate = {
+    id: string;
+    name: string;
+    status: CertificateStatus;
+    expiryDate?: string;
+    certificateUrl?: string;
+    recipientName?: string;
+  };
+
+  type EmployeeCertificate = {
+    id: string;
+    employeeName: string;
+    certificateName: string;
+    status: CertificateStatus;
+    expiryDate?: string;
+  };
+
+  // First, let's add the type definition for InspectionCertificate
+  type InspectionCertificate = {
+    id: number;
+    certificate_url: string;
+    date_of_inspection: number;
+    frequency: string;
+    restaurant_id: number;
+    uploaded_by: number;
+    inspection_certificate_category_id: number;
+    created_at: number;
+  };

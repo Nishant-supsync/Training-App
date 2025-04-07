@@ -225,7 +225,6 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ServiceProvider } from '../types';
 
 interface ServiceProviderListProps {
-  providers: ServiceProvider[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onProviderSelect: (provider: ServiceProvider) => void;
@@ -285,7 +284,6 @@ const MOCK_SERVICE_PROVIDERS: ServiceProvider[] = [
 ];
 
 export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
-  providers,
   searchQuery,
   setSearchQuery,
   onProviderSelect,

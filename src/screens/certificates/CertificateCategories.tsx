@@ -4,103 +4,78 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronLeft } from 'lucide-react-native';
 import { Search, ArrowLeft } from 'lucide-react-native';
-
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import api from '@/src/api/apiService';
 
 type CategoryType = {
-  id: string;
+  id: number;
   name: string;
+  frequency: number;
 };
 
 export function CertificateCategoriesScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [userRole, setUserRole] = useState<'manager' | 'employee' | null>(null);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadUserRoleAndRedirect = async () => {
-      try {
-        let role = params.role as 'manager' | 'employee' | undefined;
+    fetchCategories();
+  }, []);
 
-        if (!role) {
-          const tempRole = await AsyncStorage.getItem('@temp_user_role');
-          if (tempRole && (tempRole === 'manager' || tempRole === 'employee')) {
-            role = tempRole as 'manager' | 'employee';
-          }
-        }
-
-        if (!role && user?.role) {
-          role = user.role;
-        }
-
-        if (!role) {
-          const savedRole = await AsyncStorage.getItem('@user_role_preference');
-          if (savedRole && (savedRole === 'manager' || savedRole === 'employee')) {
-            role = savedRole as 'manager' | 'employee';
-          } else {
-            role = 'employee';
-          }
-        }
-
-        setUserRole(role);
-      } catch (error) {
-        console.error('Error loading user role:', error);
-        setUserRole('employee');
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(API_ENDPOINTS.CERTIFICATE_CATEGORIES);
+      if (response.data) {
+        setCategories(response.data);
+        setError(null);
       }
-    };
-
-    loadUserRoleAndRedirect();
-  }, [params.role, user]);
-
-  const certificateCategories: CategoryType[] = [
-    { id: '1', name: 'Food Manager' },
-    { id: '2', name: 'Food Handler' },
-    { id: '3', name: 'Allergen awareness' },
-    { id: '4', name: 'Alcohol server training' },
-    { id: '5', name: 'Sexual harassment prevention – employee' },
-    { id: '6', name: 'Sexual harassment prevention – Manager' },
-    { id: '7', name: 'CPR, First Aid, AED' },
-    { id: '8', name: 'Active Shooter Training' },
-    { id: '9', name: 'Cannabis Safety' },
-  ];
+    } catch (err) {
+      setError('Failed to load categories. Please try again later.');
+      console.error('Error fetching categories:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCategorySelect = (category: CategoryType) => {
-    if (userRole === 'employee') {
+    if (user?.role === 'employee') {
       router.push({
         pathname: '/certificate-section/employee/1',
         params: {
-          category: category.id,
-          categoryName: category.name,
-          role: userRole,
-          name: user?.name || 'Your'
+          category: category.id.toString(),
+          // categoryName: category.name,
+          // role: user.role,
+          // name: user?.name || 'Your'
         }
       } as any);
     } else {
       router.push({
         pathname: '/certificate-section/employees',
         params: {
-          category: category.id,
-          categoryName: category.name
+          category: category.id.toString(),
+          categoryName: category.name 
         }
       } as any);
     }
   };
 
   const filteredCategories = searchQuery
-    ? certificateCategories.filter(category =>
+    ? categories.filter(category =>
       category.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    : certificateCategories;
+    : categories;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -113,16 +88,14 @@ export function CertificateCategoriesScreen() {
         <Text className="text-xl font-semibold text-center flex-1 pr-8">Certificates</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4">
+      <ScrollView className="flex-1 px-4 h-full">
         <Text className="text-xl font-normal text-black mt-5 mb-4">
           Select a certification category
         </Text>
 
         <View className="mb-4 bg-[#F8F9FA] rounded-lg border border-[#EDEFF3]">
-          <View className="flex-row items-center py-2 px-3 ">
-            {/* <Text className="text-gray-400 mr-2">🔍</Text> */}
+          <View className="flex-row items-center py-2 px-3">
             <Search size={20} color="#718096" />
-
             <TextInput
               placeholder="Search"
               placeholderTextColor="#718096"
@@ -133,18 +106,36 @@ export function CertificateCategoriesScreen() {
           </View>
         </View>
 
-        <View className="bg-white rounded-lg overflow-hidden border border-[#EDEFF3] mb-5">
-          {filteredCategories.map((category, index) => (
-            <TouchableOpacity
-              key={category.id}
-              className={`flex-row justify-between items-center py-4 px-4 ${index !== filteredCategories.length - 1 ? "border-none border-[#E2E8F0]" : ""}`}
-              onPress={() => handleCategorySelect(category)}
+        {isLoading ? (
+          <View className="flex-1 min-h-[400px] justify-center items-center">
+            <ActivityIndicator size="large" color="#0066CC" />
+          </View>
+        ) : error ? (
+          <View className="flex-1 justify-center items-center py-8">
+            <Text className="text-red-500 text-center">{error}</Text>
+            <TouchableOpacity 
+              onPress={fetchCategories}
+              className="mt-4 bg-blue-500 px-4 py-2 rounded-lg"
             >
-              <Text className="text-base text-black">{category.name}</Text>
-              <Text className="text-gray-400 text-2xl">›</Text>
+              <Text className="text-white">Retry</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
+        ) : (
+          <View className="bg-white rounded-lg overflow-hidden border border-[#EDEFF3] mb-5">
+            {filteredCategories.map((category, index) => (
+              <TouchableOpacity
+                key={category.id}
+                className={`flex-row justify-between items-center py-4 px-4 ${
+                  index !== filteredCategories.length - 1 ? "border-none border-[#E2E8F0]" : ""
+                }`}
+                onPress={() => handleCategorySelect(category)}
+              >
+                <Text className="text-base text-black">{category.name}</Text>
+                <Text className="text-gray-400 text-2xl">›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
