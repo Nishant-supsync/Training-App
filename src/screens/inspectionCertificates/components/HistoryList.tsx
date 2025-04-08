@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { InspectionCertificate } from '../types';
 import { useRouter } from 'expo-router';
 import moment from 'moment';

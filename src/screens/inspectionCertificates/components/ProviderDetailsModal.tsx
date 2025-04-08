@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { X, Star, Phone, MapPin } from 'lucide-react-native';
 import { ServiceProvider } from '../types';
 
 interface ProviderDetailsModalProps {
@@ -25,7 +25,7 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-xl font-semibold text-gray-800">Service Provider</Text>
             <TouchableOpacity onPress={onClose}>
-              <IconSymbol name="xmark" size={24} color="#4A5568" />
+              <X size={24} color="#4A5568" />
             </TouchableOpacity>
           </View>
           
@@ -35,11 +35,12 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
               <Text className="text-sm text-gray-600 mb-2">{provider.primaryService}</Text>
               <View className="flex-row items-center">
                 {[1, 2, 3, 4, 5].map(star => (
-                  <IconSymbol 
+                  <Star 
                     key={star}
-                    name={star <= Math.floor(provider.rating) ? "star.fill" : (star <= provider.rating + 0.5 ? "star.leadinghalf.filled" : "star")}
                     size={16}
                     color="#FFAB00"
+                    fill={star <= Math.floor(provider.rating) ? "#FFAB00" : "none"}
+                    strokeWidth={star <= Math.floor(provider.rating) ? 0 : 1.5}
                   />
                 ))}
                 <Text className="ml-1 text-sm text-gray-600">{provider.rating}</Text>
@@ -58,11 +59,11 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
             <Text className="text-base font-semibold text-gray-800 mb-3">Contact Information</Text>
             <View className="bg-gray-50 rounded-lg p-4">
               <View className="flex-row items-center mb-3">
-                <IconSymbol name="phone" size={20} color="#4A5568" />
+                <Phone size={20} color="#4A5568" />
                 <Text className="ml-3 text-sm text-gray-600">{provider.contactInfo}</Text>
               </View>
               <View className="flex-row items-center">
-                <IconSymbol name="mappin" size={20} color="#4A5568" />
+                <MapPin size={20} color="#4A5568" />
                 <Text className="ml-3 text-sm text-gray-600">{provider.location}</Text>
               </View>
             </View>

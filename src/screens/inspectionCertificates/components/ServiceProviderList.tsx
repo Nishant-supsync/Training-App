@@ -1,227 +1,6 @@
-// import React from 'react';
-// import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
-// import { IconSymbol } from '@/components/ui/IconSymbol';
-// import { ServiceProvider } from '../types';
-
-// interface ServiceProviderListProps {
-//   providers: ServiceProvider[];
-//   searchQuery: string;
-//   setSearchQuery: (query: string) => void;
-//   onProviderSelect: (provider: ServiceProvider) => void;
-// }
-
-// export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
-//   providers,
-//   searchQuery,
-//   setSearchQuery,
-//   onProviderSelect,
-// }) => {
-//   const renderProviderItem = ({ item }: { item: ServiceProvider }) => (
-//     <TouchableOpacity 
-//       style={styles.providerItem}
-//       onPress={() => onProviderSelect(item)}
-//     >
-//       <View style={styles.providerHeader}>
-//         <Image 
-//           source={{ uri: item.logo }}
-//           style={styles.providerLogo}
-//         />
-//         <View style={styles.providerInfo}>
-//           <Text style={styles.providerName}>{item.name}</Text>
-//           <Text style={styles.providerService}>{item.primaryService}</Text>
-//           <View style={styles.ratingContainer}>
-//             {[1, 2, 3, 4, 5].map(star => (
-//               <IconSymbol 
-//                 key={star}
-//                 name={star <= Math.floor(item.rating) ? "star.fill" : (star <= item.rating + 0.5 ? "star.leadinghalf.filled" : "star")}
-//                 size={16}
-//                 color="#FFAB00"
-//               />
-//             ))}
-//             <Text style={styles.ratingText}>{item.rating}</Text>
-//           </View>
-//         </View>
-//       </View>
-//       <Text style={styles.providerDescription} numberOfLines={2}>
-//         {item.description}
-//       </Text>
-//       <View style={styles.providerFooter}>
-//         <Text style={styles.locationText}>{item.location}</Text>
-//         <TouchableOpacity style={styles.contactButton}>
-//           <Text style={styles.contactButtonText}>Contact</Text>
-//         </TouchableOpacity>
-//       </View>
-//     </TouchableOpacity>
-//   );
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.searchContainer}>
-//         <TextInput
-//           style={styles.searchInput}
-//           placeholder="Search providers..."
-//           value={searchQuery}
-//           onChangeText={setSearchQuery}
-//         />
-//       </View>
-
-//       <FlatList
-//         data={providers}
-//         renderItem={renderProviderItem}
-//         keyExtractor={item => item.id}
-//         contentContainerStyle={styles.listContent}
-//         showsVerticalScrollIndicator={false}
-//         ListEmptyComponent={() => (
-//           <View style={styles.emptyContainer}>
-//             <Text style={styles.emptyText}>No service providers found</Text>
-//           </View>
-//         )}
-//       />
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: 16,
-//   },
-//   searchContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     marginBottom: 16,
-//     borderWidth: 1,
-//     borderColor: '#E2E8F0',
-//   },
-//   searchInput: {
-//     flex: 1,
-//     height: 44,
-//     fontSize: 16,
-//     color: '#1A2B3C',
-//   },
-//   listContent: {
-//     paddingBottom: 20,
-//   },
-//   providerItem: {
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 8,
-//     padding: 16,
-//     marginBottom: 12,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 3,
-//     elevation: 2,
-//   },
-//   providerHeader: {
-//     flexDirection: 'row',
-//     marginBottom: 12,
-//   },
-//   providerLogo: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 8,
-//     marginRight: 12,
-//   },
-//   providerInfo: {
-//     flex: 1,
-//     justifyContent: 'center',
-//   },
-//   providerName: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#1A2B3C',
-//     marginBottom: 4,
-//   },
-//   providerService: {
-//     fontSize: 14,
-//     color: '#4A5568',
-//     marginBottom: 4,
-//   },
-//   ratingContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   ratingText: {
-//     marginLeft: 4,
-//     fontSize: 14,
-//     color: '#4A5568',
-//   },
-//   providerDescription: {
-//     fontSize: 14,
-//     color: '#4A5568',
-//     lineHeight: 20,
-//     marginBottom: 12,
-//   },
-//   providerFooter: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//   },
-//   locationText: {
-//     fontSize: 14,
-//     color: '#4A5568',
-//   },
-//   contactButton: {
-//     backgroundColor: '#2C7BE5',
-//     borderRadius: 6,
-//     paddingVertical: 8,
-//     paddingHorizontal: 16,
-//   },
-//   contactButtonText: {
-//     color: '#FFFFFF',
-//     fontSize: 14,
-//     fontWeight: '500',
-//   },
-//   emptyContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 20,
-//   },
-//   emptyText: {
-//     fontSize: 16,
-//     color: '#4A5568',
-//     textAlign: 'center',
-//   },
-// }); 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Star, ChevronRight, X, Search, SlidersHorizontal } from 'lucide-react-native';
 import { ServiceProvider } from '../types';
 import api from '@/src/api/apiService';
 import { API_ENDPOINTS } from '@/src/api/endpoints';
@@ -309,10 +88,10 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
       onPress={() => onProviderSelect(item)}
     >
       <View className="flex-row items-center mr-3">
-        <IconSymbol
-          name="star.fill"
+        <Star
           size={20}
           color="#FFD700"
+          fill="#FFD700"
         />
         <Text className="text-lg font-bold ml-1">{item.rating}</Text>
       </View>
@@ -322,9 +101,8 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
       <Text className="flex-1 text-lg font-medium">{item.name}</Text>
       
       <View className="bg-gray-100 rounded-full p-3">
-        <IconSymbol
-          name="chevron.right"
-          size={16}
+        <ChevronRight
+          size={20}
           color="#6B7280"
         />
       </View>
@@ -337,8 +115,7 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
         <View className="flex-row justify-between items-center mb-6">
           <Text className="text-xl font-bold">Add Filter</Text>
           <TouchableOpacity onPress={() => setShowFilter(false)}>
-            <IconSymbol
-              name="xmark"
+            <X
               size={20}
               color="#9CA3AF"
             />
@@ -355,11 +132,12 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
           >
             <View className="flex-row">
               {[1, 2, 3, 4, 5].map((star) => (
-                <IconSymbol
+                <Star
                   key={star}
-                  name={star <= rating ? "star.fill" : "star"}
                   size={24}
                   color="#FFD700"
+                  fill={star <= rating ? "#FFD700" : "none"}
+                  strokeWidth={star <= rating ? 0 : 1.5}
                 />
               ))}
             </View>
@@ -395,8 +173,7 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
       <View className="px-4 mb-4">
         <View className="flex-row items-center">
           <View className="flex-1 bg-white rounded-full pl-4 pr-2 py-2.5 flex-row items-center border border-gray-200">
-            <IconSymbol
-              name="magnifyingglass"
+            <Search
               size={18}
               color="#A0AEC0"
             />
@@ -412,8 +189,7 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
             className="bg-white rounded-full p-3 ml-2 border border-gray-200"
             onPress={() => setShowFilter(true)}
           >
-            <IconSymbol
-              name="slider.horizontal.3"
+            <SlidersHorizontal
               size={18}
               color="#A0AEC0"
             />
