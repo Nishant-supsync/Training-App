@@ -1,67 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { InspectionCertificate } from '../types';
 import { useRouter } from 'expo-router';
 import moment from 'moment';
 import { ChevronRight, PenSquare } from 'lucide-react-native';
+import api from '@/src/api/apiService';
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import { useAuth } from '@/context/AuthContext';
 
 interface HistoryListProps {
   onUploadPress: () => void;
 }
 
-// You can move this to a separate file like dummyData.ts later
-export const dummyCertificates: InspectionCertificate[] = [
-  {
-    id: '1',
-    type: 'Annual Safety Inspection',
-    date: '2024-03-15',
-    status: 'pass',
-    documentUrl: 'safety_inspection_2024.pdf',
-    renewalPeriod: '6 Months'
-  },
-  {
-    id: '2',
-    type: 'Fire Safety Certification',
-    date: '2024-02-20',
-    status: 'pending',
-    documentUrl: 'fire_safety_cert.pdf',
-    renewalPeriod: '6 Months'
-  },
-  {
-    id: '3',
-    type: 'Equipment Maintenance Report',
-    date: '2024-01-10',
-    status: 'pass',
-    documentUrl: 'equipment_maintenance.pdf',
-    renewalPeriod: '6 Months'
-  },
-  {
-    id: '4',
-    type: 'Health & Safety Audit',
-    date: '2023-12-05',
-    status: 'fail',
-    documentUrl: 'health_safety_audit.pdf',
-    renewalPeriod: '6 Months'
-  },
-  {
-    id: '5',
-    type: 'Environmental Compliance',
-    date: '2023-11-30',
-    status: 'pass',
-    documentUrl: 'environmental_report.pdf',
-    renewalPeriod: '6 Months'
-  }
-];
+// Update the API response type to include new fields
+interface ApiInspectionCertificate {
+  id: number;
+  certificate_url: string;
+  date_of_inspection: number | null;
+  frequency: string;
+  uploaded_by: number;
+  inspection_certificate_category_id: number;
+  restaurant_uuid: string;
+  category_name: string;
+}
 
 export const HistoryList: React.FC<HistoryListProps> = ({ onUploadPress }) => {
   const router = useRouter();
-  const [certificates] = useState(dummyCertificates);
+  const { user } = useAuth();
+  const [certificates, setCertificates] = useState<InspectionCertificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, []);
+
+  const fetchCertificates = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.INSPECTION_CERTIFICATES, {
+        params: {
+          restaurant_id: user?.restaurant_id,
+          employee_id: user?.employee_id,
+        }
+      });
+
+      if (response.data.status && Array.isArray(response.data.data)) {
+        // Transform API data to match our InspectionCertificate type
+        const transformedCertificates: InspectionCertificate[] = response.data.data.map(
+          (cert: ApiInspectionCertificate) => ({
+            id: String(cert.id),
+            type: cert.category_name, // Use category_name instead of ID
+            date: cert.date_of_inspection 
+              ? moment(cert.date_of_inspection).format('YYYY-MM-DD')
+              : 'Not specified', // Handle null date_of_inspection
+            documentUrl: cert.certificate_url,
+            renewalPeriod: `${cert.frequency} Days`, // Changed to Days as per API response
+            category_id: cert.inspection_certificate_category_id
+          })
+        );
+        setCertificates(transformedCertificates);
+      }
+    } catch (err) {
+      console.error('Error fetching certificates:', err);
+      setError('Failed to load certificates');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleCertificatePress = (certificate: InspectionCertificate) => {
     router.push({
       pathname: '/inspection-certificates/view-edit' as any,
-      params: { id: certificate.id }
+      params: { id: certificate.id, category_id: certificate.category_id }
     });
   };
 
@@ -79,6 +90,22 @@ export const HistoryList: React.FC<HistoryListProps> = ({ onUploadPress }) => {
       <PenSquare size={20} color="#60A5FA" />
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Loading certificates...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500">{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white">

@@ -288,22 +288,23 @@ export default function HomeScreen() {
               params: {
                 restaurant_id: restaurantId,
                 employee_id: Number(employeeId),
-                // inspection_category_id: 0
               }
             }
           );
 
           console.log("inspectionCertsResponse", inspectionCertsResponse.data)
 
-
           if (inspectionCertsResponse.data.status && Array.isArray(inspectionCertsResponse.data.data)) {
-            const inspectionCertificates = inspectionCertsResponse.data.data.map((cert: InspectionCertificate) => ({
+            const inspectionCertificates = inspectionCertsResponse.data.data.map((cert: ApiInspectionCertificate) => ({
               id: `inspection_${String(cert.id)}`,
-              name: `Inspection Certificate ${cert.inspection_certificate_category_id}`, // You might want to map category IDs to names
+              name: cert.category_name,
               status: determineInspectionCertificateStatus(cert),
-              expiryDate: calculateExpiryDate(cert.date_of_inspection, cert.frequency),
+              expiryDate: cert.date_of_inspection 
+                ? calculateExpiryDate(cert.date_of_inspection, cert.frequency)
+                : 'Not specified',
               certificateUrl: cert.certificate_url,
-              type: 'inspection' // Add type to distinguish between certificate types
+              type: 'inspection',
+              restaurant_uuid: cert.restaurant_uuid
             }));
             allCertificates = [...allCertificates, ...inspectionCertificates];
           }
@@ -391,9 +392,9 @@ export default function HomeScreen() {
   };
 
   // Helper function to determine inspection certificate status
-  const determineInspectionCertificateStatus = (cert: InspectionCertificate): CertificateStatus => {
-    const inspectionDate = new Date(cert.date_of_inspection);
-    const frequency = parseInt(cert.frequency);
+  const determineInspectionCertificateStatus = (cert: ApiInspectionCertificate): CertificateStatus => {
+    const inspectionDate = cert.date_of_inspection ? new Date(cert.date_of_inspection) : new Date();
+    const frequency = cert.frequency ? parseInt(cert.frequency) : 0;
     const expiryDate = new Date(inspectionDate);
     expiryDate.setMonth(expiryDate.getMonth() + frequency);
 
@@ -542,7 +543,7 @@ export default function HomeScreen() {
                           className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 ${cert.status.color}`}
                         >
                           <View>
-                            <Text className="font-medium text-base">{cert.name}</Text>
+                            <Text className="font-medium text-base max-w-80">{cert.name}</Text>
                             {cert.recipientName && (
                               <Text className="text-gray-500 text-xs mb-1">{cert.recipientName}</Text>
                             )}
@@ -700,3 +701,15 @@ export default function HomeScreen() {
     inspection_certificate_category_id: number;
     created_at: number;
   };
+
+  // Update the interface first
+  interface ApiInspectionCertificate {
+    id: number;
+    certificate_url: string;
+    date_of_inspection: number | null;
+    frequency: string;
+    uploaded_by: number;
+    inspection_certificate_category_id: number;
+    restaurant_uuid: string;
+    category_name: string;
+  }

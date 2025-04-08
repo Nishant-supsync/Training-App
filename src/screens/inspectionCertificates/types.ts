@@ -2,9 +2,10 @@ export type InspectionCertificate = {
   id: string;
   type: string;
   date: string;
-  status: 'pass' | 'fail' | 'pending';
+  // status: 'pass' | 'fail' | 'pending';
   documentUrl?: string;
   renewalPeriod: string;
+  category_id: string;
 };
 
 export type ServiceProvider = {

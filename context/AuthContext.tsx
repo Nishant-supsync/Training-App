@@ -86,12 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Mock API response
       const mockUser: User = {
-        id: '123456',
+        id: '1',
         name: 'Nishant Mishra',
         email: email,
         employee_id: '1',
         restaurant_id: '6c173e39-3ab5-4414-94aa-6af5174e6a9f',
-        // role: email.includes('manager') ? 'manager' : 'employee',
         role: role as UserRole,
         location: 'Downtown Restaurant',
         jobTitle: 'Head Chef',

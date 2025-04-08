@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import * as DocumentPicker from 'expo-document-picker';
-import moment from 'moment';
 
 // Import subcomponents
 import { Header } from './components/Header';
@@ -12,89 +10,20 @@ import { HistoryList } from './components/HistoryList';
 import { UploadForm } from './components/UploadForm';
 import { ServiceProviderList } from './components/ServiceProviderList';
 import { ProviderDetailsModal } from './components/ProviderDetailsModal';
-import { UploadModal } from './components/UploadModal';
-import { InspectionCertificate, ServiceProvider, TabType, SubTabType } from './types';
+import { ServiceProvider, TabType, SubTabType } from './types';
 
 export default function InspectionCertificatesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [mainTab, setMainTab] = useState<TabType>('upload');
   const [subTab, setSubTab] = useState<SubTabType>('upload');
-  const [showUploadModal, setShowUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
 
-  // Form state for new inspection
-  const [newInspection, setNewInspection] = useState({
-    type: '',
-    date: moment().format('MM/DD/YYYY'),
-    document: null as DocumentPicker.DocumentPickerAsset | null
-  });
-
-  // Handle document picking
-  const handlePickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: true
-      });
-
-      if (result.canceled) {
-        return;
-      }
-
-      setNewInspection({
-        ...newInspection,
-        document: result.assets[0]
-      });
-    } catch (error) {
-      Alert.alert('Error', 'There was an error selecting the file');
-      console.error('Document picker error:', error);
-    }
-  };
-
-  // Handle adding a new inspection
-  const handleAddInspection = async () => {
-    try {
-      setIsUploading(true);
-
-      // Validate form
-      if (!newInspection.type) {
-        Alert.alert('Error', 'Please enter an inspection type');
-        setIsUploading(false);
-        return;
-      }
-
-      if (!newInspection.document) {
-        Alert.alert('Error', 'Please select a document to upload');
-        setIsUploading(false);
-        return;
-      }
-
-      // In a real app, this would upload the document to a server
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Success
-      Alert.alert(
-        'Success',
-        'Inspection certificate uploaded successfully',
-        [{ text: 'OK', onPress: () => setShowUploadModal(false) }]
-      );
-
-      // Reset form
-      setNewInspection({
-        type: '',
-        date: moment().format('MM/DD/YYYY'),
-        document: null
-      });
-
-    } catch (error) {
-      Alert.alert('Error', 'Failed to upload inspection certificate');
-      console.error('Add inspection error:', error);
-    } finally {
-      setIsUploading(false);
-    }
+  // Function to switch to upload tab
+  const handleUploadPress = () => {
+    setMainTab('upload');
+    setSubTab('upload');
   };
 
   return (
@@ -157,29 +86,11 @@ export default function InspectionCertificatesScreen() {
         />
       ) : (
         subTab === 'upload' ? (
-          <UploadForm
-            onPickDocument={handlePickDocument}
-            onSubmit={handleAddInspection}
-            newInspection={newInspection}
-            setNewInspection={setNewInspection}
-          />
+          <UploadForm />
         ) : (
-          <HistoryList
-            onUploadPress={() => setShowUploadModal(true)}
-          />
+          <HistoryList onUploadPress={handleUploadPress} />
         )
       )}
-
-      {/* Upload Inspection Modal */}
-      <UploadModal
-        visible={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        isUploading={isUploading}
-        newInspection={newInspection}
-        setNewInspection={setNewInspection}
-        onPickDocument={handlePickDocument}
-        onSubmit={handleAddInspection}
-      />
 
       {/* Provider Details Modal */}
       <ProviderDetailsModal

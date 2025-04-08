@@ -301,26 +301,22 @@ export function CertificateUploadModal({
       formData.append('restaurant_uuid', user?.restaurant_id?.toString() || '0');
       
       // Send data to the API
-      const response = await fetch('https://x0n1-tbv3-v8eo.n7.xano.io/api:q3fDEZGm/certificates/add', {
-        method: 'POST',
+      const response = await api.post(API_ENDPOINTS.ADD_CERTIFICATE, formData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
         },
-        body: formData
       });
 
       console.log('response correct output', response);
-
       
-      if (!response.ok) {
+      if (response.status !== 200) {
         console.log('response output', response);
-        const errorData = await response.text();
-        console.error('API error response:', errorData);
+        console.error('API error response:', response.data);
         throw new Error(`API request failed with status ${response.status}`);
       }
       
-      const responseData = await response.json();
+      const responseData = response.data;
       console.log('Upload success:', responseData);
       
       // Set success state and trigger callback

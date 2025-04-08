@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ServiceProvider } from '../types';
 
@@ -20,24 +20,20 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
       animationType="slide"
       transparent={true}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Service Provider</Text>
+      <View className="flex-1 bg-black/50 justify-center items-center">
+        <View className="bg-white rounded-xl p-6 w-11/12 max-w-md">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-xl font-semibold text-gray-800">Service Provider</Text>
             <TouchableOpacity onPress={onClose}>
               <IconSymbol name="xmark" size={24} color="#4A5568" />
             </TouchableOpacity>
           </View>
           
-          <View style={styles.providerDetailHeader}>
-            <Image 
-              source={{ uri: provider.logo }}
-              style={styles.providerDetailLogo}
-            />
-            <View style={styles.providerDetailInfo}>
-              <Text style={styles.providerDetailName}>{provider.name}</Text>
-              <Text style={styles.providerDetailService}>{provider.primaryService}</Text>
-              <View style={styles.ratingContainer}>
+          <View className="flex-row mb-6">
+            <View className="flex-1 justify-center">
+              <Text className="text-lg font-semibold text-gray-800 mb-1">{provider.name}</Text>
+              <Text className="text-sm text-gray-600 mb-2">{provider.primaryService}</Text>
+              <View className="flex-row items-center">
                 {[1, 2, 3, 4, 5].map(star => (
                   <IconSymbol 
                     key={star}
@@ -46,34 +42,34 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
                     color="#FFAB00"
                   />
                 ))}
-                <Text style={styles.ratingText}>{provider.rating}</Text>
+                <Text className="ml-1 text-sm text-gray-600">{provider.rating}</Text>
               </View>
             </View>
           </View>
           
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.providerDetailDescription}>
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-gray-800 mb-3">About</Text>
+            <Text className="text-sm text-gray-600 leading-5">
               {provider.description}
             </Text>
           </View>
           
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
-            <View style={styles.contactInfoContainer}>
-              <View style={styles.contactInfoRow}>
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-gray-800 mb-3">Contact Information</Text>
+            <View className="bg-gray-50 rounded-lg p-4">
+              <View className="flex-row items-center mb-3">
                 <IconSymbol name="phone" size={20} color="#4A5568" />
-                <Text style={styles.contactInfoText}>{provider.contactInfo}</Text>
+                <Text className="ml-3 text-sm text-gray-600">{provider.contactInfo}</Text>
               </View>
-              <View style={styles.contactInfoRow}>
+              <View className="flex-row items-center">
                 <IconSymbol name="mappin" size={20} color="#4A5568" />
-                <Text style={styles.contactInfoText}>{provider.location}</Text>
+                <Text className="ml-3 text-sm text-gray-600">{provider.location}</Text>
               </View>
             </View>
           </View>
           
-          <TouchableOpacity style={styles.contactButton}>
-            <Text style={styles.contactButtonText}>Contact Provider</Text>
+          <TouchableOpacity className="bg-blue-500 rounded-lg p-4 items-center">
+            <Text className="text-white text-base font-semibold">Contact Provider</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -81,103 +77,4 @@ export const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1A2B3C',
-  },
-  providerDetailHeader: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  providerDetailLogo: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  providerDetailInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  providerDetailName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A2B3C',
-    marginBottom: 4,
-  },
-  providerDetailService: {
-    fontSize: 14,
-    color: '#4A5568',
-    marginBottom: 8,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#4A5568',
-  },
-  sectionContainer: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A2B3C',
-    marginBottom: 12,
-  },
-  providerDetailDescription: {
-    fontSize: 14,
-    color: '#4A5568',
-    lineHeight: 20,
-  },
-  contactInfoContainer: {
-    backgroundColor: '#F7FAFC',
-    borderRadius: 8,
-    padding: 16,
-  },
-  contactInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  contactInfoText: {
-    marginLeft: 12,
-    fontSize: 14,
-    color: '#4A5568',
-  },
-  contactButton: {
-    backgroundColor: '#2C7BE5',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  contactButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-}); 
+export default ProviderDetailsModal; 

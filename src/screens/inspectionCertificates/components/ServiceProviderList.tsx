@@ -219,10 +219,13 @@
 
 
 
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ServiceProvider } from '../types';
+import api from '@/src/api/apiService';
+import { API_ENDPOINTS } from '@/src/api/endpoints';
+import { useAuth } from '@/context/AuthContext';
 
 interface ServiceProviderListProps {
   searchQuery: string;
@@ -230,58 +233,17 @@ interface ServiceProviderListProps {
   onProviderSelect: (provider: ServiceProvider) => void;
 }
 
-const MOCK_SERVICE_PROVIDERS: ServiceProvider[] = [
-  {
-    id: '1',
-    name: 'Elite Inspection Services',
-    logo: 'https://example.com/elite-logo.png',
-    rating: 2,
-    description: 'Professional home inspection services with over 15 years of experience. Certified and insured inspectors.',
-    primaryService: 'Home Inspection',
-    contactInfo: '212-555-1234',
-    location: 'New York, NY'
-  },
-  {
-    id: '2',
-    name: 'SafeGuard Inspectors',
-    logo: 'https://example.com/safeguard-logo.png',
-    rating: 4.9,
-    description: 'Comprehensive commercial building inspections. Same-day reports and thermal imaging included.',
-    primaryService: 'Commercial Inspection',
-    contactInfo: '718-555-5678',
-    location: 'Brooklyn, NY'
-  },
-  {
-    id: '3',
-    name: 'Quality Property Check',
-    logo: 'https://example.com/quality-logo.png',
-    rating: 3.7,
-    description: 'Detailed residential inspections with free follow-up consultations. Licensed and certified.',
-    primaryService: 'Residential Inspection',
-    contactInfo: '347-555-9012',
-    location: 'Queens, NY'
-  },
-  {
-    id: '4',
-    name: 'Pro Building Inspectors',
-    logo: 'https://example.com/pro-logo.png',
-    rating: 4.6,
-    description: 'Specialized in multi-family and apartment building inspections. Over 5000 inspections completed.',
-    primaryService: 'Multi-Family Inspection',
-    contactInfo: '718-555-3456',
-    location: 'Bronx, NY'
-  },
-  {
-    id: '5',
-    name: 'Certified Home Check',
-    logo: 'https://example.com/certified-logo.png',
-    rating: 4.9,
-    description: 'Thorough home inspections with same-day digital reports. Serving the tri-state area.',
-    primaryService: 'Home Inspection',
-    contactInfo: '718-555-7890',
-    location: 'Staten Island, NY'
-  }
-];
+// API response type
+interface ApiProvider {
+  id: number;
+  service_provider: string;
+  is_active: boolean;
+  description: string;
+  ratings: number;
+  email: string;
+  provider_ph_number: string;
+  website: string;
+}
 
 export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
   searchQuery,
@@ -290,11 +252,55 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
 }) => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  // Filter providers based on rating
-  const filteredProviders = MOCK_SERVICE_PROVIDERS.filter(provider => {
-    if (selectedRating === null) return true;
-    return provider.rating >= selectedRating;
+  // Fetch providers from API
+  const fetchProviders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await api.get(API_ENDPOINTS.PROVIDERS_LIST);
+      
+      // Transform API response to match ServiceProvider type
+      const transformedProviders: ServiceProvider[] = response.data.map((provider: ApiProvider) => ({
+        id: provider.id.toString(),
+        name: provider.service_provider,
+        rating: provider.ratings,
+        description: provider.description,
+        primaryService: provider.service_provider, // Using service_provider as primaryService
+        contactInfo: provider.provider_ph_number,
+        location: provider.website // Using website as location since API doesn't provide location
+      }));
+      
+      setProviders(transformedProviders);
+    } catch (err) {
+      console.error('Error fetching providers:', err);
+      setError('Failed to load service providers. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Call fetchProviders when component mounts
+  useEffect(() => {
+    fetchProviders();
+  }, []);
+
+  // Filter providers based on search query and rating
+  const filteredProviders = providers.filter(provider => {
+    // Filter by search query (case insensitive)
+    const matchesSearch = searchQuery === '' || 
+      provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      provider.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filter by rating
+    const matchesRating = selectedRating === null || provider.rating >= selectedRating;
+    
+    return matchesSearch && matchesRating;
   });
 
   const renderProviderItem = ({ item }: { item: ServiceProvider }) => (
@@ -396,7 +402,7 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
             />
             <TextInput
               className="flex-1 ml-2 text-gray-600"
-              placeholder="Search by zip code"
+              placeholder="Search providers..."
               placeholderTextColor="#A0AEC0"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -415,19 +421,42 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
         </View>
       </View>
 
-      {/* Provider List */}
-      <FlatList
-        data={filteredProviders}
-        renderItem={renderProviderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View className="items-center py-8">
-            <Text className="text-gray-500">No service providers found</Text>
-          </View>
-        )}
-      />
+      {/* Loading and Error States */}
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#4299E1" />
+          <Text className="mt-4 text-gray-500">Loading service providers...</Text>
+        </View>
+      ) : error ? (
+        <View className="flex-1 justify-center items-center px-6">
+          <Text className="text-red-500 text-center">{error}</Text>
+          <TouchableOpacity 
+            className="mt-4 bg-blue-500 px-4 py-2 rounded-full"
+            onPress={() => {
+              setLoading(true);
+              setError(null);
+              // Retry fetching
+              fetchProviders();
+            }}
+          >
+            <Text className="text-white font-medium">Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        /* Provider List */
+        <FlatList
+          data={filteredProviders}
+          renderItem={renderProviderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View className="items-center py-8">
+              <Text className="text-gray-500">No service providers found</Text>
+            </View>
+          )}
+        />
+      )}
 
       {/* Filter Modal */}
       {showFilter && <FilterModal />}
@@ -436,103 +465,3 @@ export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
 };
 
 export default ServiceProviderList;
-
-
-
-
-
-
-
-
-
-// import React from 'react';
-// import { View, Text, FlatList, TouchableOpacity, TextInput } from 'react-native';
-// import { IconSymbol } from '@/components/ui/IconSymbol';
-// import { ServiceProvider } from '../types';
-
-
-// interface ServiceProviderListProps {
-//   providers: ServiceProvider[];
-//   searchQuery: string;
-//   setSearchQuery: (query: string) => void;
-//   onProviderSelect: (provider: ServiceProvider) => void;
-// }
-
-// export const ServiceProviderList: React.FC<ServiceProviderListProps> = ({
-//   providers,
-//   searchQuery,
-//   setSearchQuery,
-//   onProviderSelect,
-// }) => {
-//   const renderProviderItem = ({ item }: { item: ServiceProvider }) => (
-//     <TouchableOpacity 
-//       className="bg-white rounded-2xl p-5 mb-4 shadow-sm"
-//       onPress={() => onProviderSelect(item)}
-//     >
-//       {/* Star rating and name in a row */}
-//       <View className="flex-row items-center">
-//         <View className="flex-row items-center">
-//           <IconSymbol
-//             name="star.fill"
-//             size={20}
-//             color="#FFAB00"
-//           />
-//           <Text className="text-xl font-bold ml-1 text-gray-800">{item.rating}</Text>
-//         </View>
-        
-//         <View className="w-px h-9 bg-gray-200 mx-3" />
-        
-//         <Text className="flex-1 text-lg font-medium text-gray-800">{item.name}</Text>
-        
-//         <View className="bg-gray-100 rounded-full p-3">
-//           <IconSymbol
-//             name="chevron.right"
-//             size={16}
-//             color="#6B7280"
-//           />
-//         </View>
-//       </View>
-//     </TouchableOpacity>
-//   );
-
-//   return (
-//     <View className="flex-1 bg-gray-50 p-4">
-//       <View className="flex-row items-center mb-6">
-//         <View className="flex-1 flex-row items-center bg-white rounded-full px-4 py-2.5 mr-2.5 border border-gray-200 shadow-sm">
-//           <IconSymbol
-//             name="magnifyingglass"
-//             size={18}
-//             color="#A0AEC0"
-//           />
-//           <TextInput
-//             className="flex-1 ml-2 text-base text-gray-600"
-//             placeholder="Search by zip code"
-//             placeholderTextColor="#A0AEC0"
-//             value={searchQuery}
-//             onChangeText={setSearchQuery}
-//           />
-//         </View>
-//         <TouchableOpacity className="bg-white rounded-full p-3 border border-gray-200 shadow-sm">
-//           <IconSymbol
-//             name="slider.horizontal.3"
-//             size={18}
-//             color="#A0AEC0"
-//           />
-//         </TouchableOpacity>
-//       </View>
-
-//       <FlatList
-//         data={providers}
-//         renderItem={renderProviderItem}
-//         keyExtractor={item => item.id}
-//         contentContainerStyle={{ paddingBottom: 20 }}
-//         showsVerticalScrollIndicator={false}
-//         ListEmptyComponent={() => (
-//           <View className="items-center py-8">
-//             <Text className="text-base text-gray-500">No service providers found</Text>
-//           </View>
-//         )}
-//       />
-//     </View>
-//   );
-// };
