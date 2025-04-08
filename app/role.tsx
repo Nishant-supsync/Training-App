@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  StyleSheet, 
   View, 
   Text, 
   TouchableOpacity,
   SafeAreaView,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -30,16 +30,13 @@ export default function RoleScreen() {
       setIsSubmitting(true);
       console.log('Selected role:', role);
       
-      // Always save the current selection temporarily
       await AsyncStorage.setItem('@temp_user_role', role);
       
-      // If remember choice is checked, save it permanently
       if (rememberChoice) {
         console.log('Saving role preference');
         await AsyncStorage.setItem('@user_role_preference', role);
       }
       
-      // Navigate to the appropriate login screen based on role
       if (role === 'manager') {
         router.replace('/auth/managerLogin');
       } else {
@@ -54,120 +51,71 @@ export default function RoleScreen() {
 
   if (isLoading || isSignedIn) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#4299E1" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor='#ECF6FF'/>
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar style="dark" backgroundColor='#FFFFFF'/>
       
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome</Text>
-        <Text style={styles.subtitle}>Please select your role to continue:</Text>
+      <View className="flex-1 p-5">
+        <View className="items-center mt-10 mb-5">
+          <Image 
+            source={require('../assets/images/sinatra-logo.png')}
+            className="h-10 w-3/5 mb-5"
+            resizeMode="contain"
+          />
+          <Image 
+            source={require('../assets/images/avatar/mascot.png')}
+            className="h-52 w-4/5"
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text className="text-3xl font-bold mb-3 text-center text-black">
+          Welcome to Sinatra
+        </Text>
+        <Text className="text-base text-gray-600 mb-10 text-center leading-6">
+          Discover How Sinatra Streamlines{'\n'}
+          Renewals, Audits, Inspections, and More!
+        </Text>
         
+        <Text className="text-lg text-black mb-5">
+          Select your role to proceed
+        </Text>
+
         <TouchableOpacity 
-          style={styles.roleButton}
+          className="bg-[#DBEEFF] p-5 rounded-xl mb-4"
           onPress={() => handleRoleSelect('manager')}
           disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.roleButtonText}>Manager</Text>
-          )}
+          <View className="flex-row justify-between items-center">
+            <View>
+              <Text className="text-lg font-bold text-black mb-1">MANAGER</Text>
+              <Text className="text-sm text-gray-600">I'm here for my renewal</Text>
+            </View>
+            <Text className="text-2xl text-black">→</Text>
+          </View>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.roleButton}
+          className="bg-[#F8F0FF] p-5 rounded-xl mb-4"
           onPress={() => handleRoleSelect('employee')}
           disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.roleButtonText}>Employee</Text>
-          )}
+          <View className="flex-row justify-between items-center">
+            <View>
+              <Text className="text-lg font-bold text-black mb-1">EMPLOYEE</Text>
+              <Text className="text-sm text-gray-600">I'm looking to train</Text>
+            </View>
+            <Text className="text-2xl text-black">→</Text>
+          </View>
         </TouchableOpacity>
-        
-        <View style={styles.rememberContainer}>
-          <TouchableOpacity 
-            style={styles.checkbox}
-            onPress={() => setRememberChoice(!rememberChoice)}
-          >
-            {rememberChoice && <Text style={styles.checkIcon}>✓</Text>}
-          </TouchableOpacity>
-          <Text style={styles.rememberText}>Remember my choice</Text>
-        </View>
       </View>
     </SafeAreaView>
   );
 }
-
-
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#F9FAFB',
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#F9FAFB',
-    },
-    content: {
-      flex: 1,
-      padding: 20,
-      justifyContent: 'center',
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    subtitle: {
-      fontSize: 16,
-      color: '#4A5568',
-      marginBottom: 30,
-      textAlign: 'center',
-    },
-    roleButton: {
-      backgroundColor: '#4299E1',
-      padding: 16,
-      borderRadius: 8,
-      marginBottom: 16,
-      alignItems: 'center',
-    },
-    roleButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    rememberContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 16,
-    },
-    checkbox: {
-      width: 20,
-      height: 20,
-      borderWidth: 1,
-      borderColor: '#CBD5E0',
-      borderRadius: 4,
-      marginRight: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    checkIcon: {
-      color: '#4299E1',
-    },
-    rememberText: {
-      color: '#4A5568',
-    },
-  });
   

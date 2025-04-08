@@ -540,28 +540,38 @@ export default function HomeScreen() {
                       {myCertificates.map((cert) => (
                         <View
                           key={cert.id}
-                          className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 ${cert.status.color}`}
+                          className="flex-row items-center justify-between bg-white p-4 rounded-2xl mb-3 shadow-sm"
                         >
-                          <View>
-                            <Text className="font-medium text-base max-w-80">{cert.name}</Text>
-                            {cert.recipientName && (
-                              <Text className="text-gray-500 text-xs mb-1">{cert.recipientName}</Text>
-                            )}
-                            <View className="flex-row items-center mt-1">
-                              <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
-                              <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
+                          <View className="flex-row items-center flex-1">
+                            <View className={`w-12 h-12 ${cert.status.color} rounded-full items-center justify-center`}>
+                              <View className="w-6 h-6 bg-transparent items-center justify-center">
+                                <Book size={20} color={cert.status.text === 'Overdue' ? '#ef4444' : 
+                                                     cert.status.text === 'Upcoming renewal' ? '#f97316' : 
+                                                     cert.status.text === 'Not submitted' ? '#3b82f6' : '#10b981'} />
+                              </View>
                             </View>
-                            {cert.expiryDate && (
-                              <Text className="text-gray-500 text-xs mt-1">
-                                Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
-                              </Text>
-                            )}
+                            <View className="ml-3 flex-1 mr-4">
+                              <Text className="font-medium text-base text-gray-900">{cert.name}</Text>
+                              {cert.recipientName && (
+                                <Text className="text-gray-500 text-xs mb-1">{cert.recipientName}</Text>
+                              )}
+                              <View className="flex-row items-center mt-1">
+                                <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
+                                <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
+                              </View>
+                              {cert.expiryDate && (
+                                <Text className="text-gray-500 text-xs mt-1">
+                                  Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
+                                </Text>
+                              )}
+                            </View>
                           </View>
-                          {cert.status.text !== 'Up to date' && (
-                            <TouchableOpacity className="bg-white px-4 py-2 rounded-lg shadow-sm">
-                              <Text className="text-blue-600 font-medium">Upload</Text>
-                            </TouchableOpacity>
-                          )}
+                          <TouchableOpacity 
+                            className={`px-4 py-2 rounded-lg ${cert.status.text === 'Up to date' ? 'opacity-0' : 'bg-blue-500'}`}
+                            disabled={cert.status.text === 'Up to date'}
+                          >
+                            <Text className="text-white font-medium">Upload</Text>
+                          </TouchableOpacity>
                         </View>
                       ))}
                     </View>
@@ -606,32 +616,40 @@ export default function HomeScreen() {
                     filteredEmployeeCerts.map((cert) => (
                       <View
                         key={cert.id}
-                        className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 ${cert.status.color}`}
+                        className="flex-row items-center justify-between bg-white p-4 rounded-2xl mb-3 shadow-sm"
                       >
-                        <View>
-                          <Text className="font-medium text-base">{cert.certificateName}</Text>
-                          <Text className="text-gray-500 text-xs mb-1">{cert.employeeName}</Text>
-                          <View className="flex-row items-center mt-1">
-                            <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
-                            <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
+                        <View className="flex-row items-center flex-1">
+                          <View className={`w-12 h-12 ${cert.status.color} rounded-full items-center justify-center`}>
+                            <View className="w-6 h-6 bg-transparent items-center justify-center">
+                              <Book size={20} color={cert.status.text === 'Overdue' ? '#ef4444' : 
+                                                   cert.status.text === 'Upcoming renewal' ? '#f97316' : 
+                                                   cert.status.text === 'Not submitted' ? '#3b82f6' : '#10b981'} />
+                            </View>
                           </View>
-                          {cert.expiryDate && (
-                            <Text className="text-gray-500 text-xs mt-1">
-                              Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
-                            </Text>
-                          )}
+                          <View className="ml-3 flex-1 mr-4">
+                            <Text className="font-medium text-base text-gray-900">{cert.certificateName}</Text>
+                            <Text className="text-gray-500 text-xs mb-1">{cert.employeeName}</Text>
+                            <View className="flex-row items-center mt-1">
+                              <View className={`w-2 h-2 rounded-full mr-2 ${cert.status.dot}`} />
+                              <Text className={`text-sm ${cert.status.textColor}`}>{cert.status.text}</Text>
+                            </View>
+                            {cert.expiryDate && (
+                              <Text className="text-gray-500 text-xs mt-1">
+                                Expires: {moment(cert.expiryDate).format('MMM D, YYYY')}
+                              </Text>
+                            )}
+                          </View>
                         </View>
-                        {cert.status.text !== 'Up to date' && (
-                          <TouchableOpacity
-                            className="bg-white px-4 py-2 rounded-lg shadow-sm"
-                            onPress={() => {
-                              Keyboard.dismiss();
-                              // Handle upload functionality
-                            }}
-                          >
-                            <Text className="text-blue-600 font-medium">Upload</Text>
-                          </TouchableOpacity>
-                        )}
+                        <TouchableOpacity 
+                          className={`px-4 py-2 rounded-lg ${cert.status.text === 'Up to date' ? 'opacity-0' : 'bg-blue-500'}`}
+                          disabled={cert.status.text === 'Up to date'}
+                          onPress={() => {
+                            Keyboard.dismiss();
+                            // Handle upload functionality
+                          }}
+                        >
+                          <Text className="text-white font-medium">Upload</Text>
+                        </TouchableOpacity>
                       </View>
                     ))
                   ) : (
